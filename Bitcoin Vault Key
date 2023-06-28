@@ -1,45 +1,66 @@
+import org.bitcoinj.core.NetworkParameters;  
+import org.bitcoinj.core.PartiallySignedTransaction;
+import org.bitcoinj.crypto.*;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.DeterministicKeyChain;
+import org.bitcoinj.wallet.KeyChain;
+import org.bitcoinj.wallet.Wallet;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.List;
+
 public class SecureBitcoinColdWallet extends Application {
-  // Generate a random 24-word mnemonic seed phrase 
-  String mnemonic;
-  do {
-    mnemonic = generateMnemonic(24);  
-  } while (!validateMnemonic(mnemonic));  // Validate mnemonic
+  private static final NetworkParameters NETWORK_PARAMETERS = NetworkParameters.prodNet();
+
+  public static void main(String[] args) {
+    SecureBitcoinColdWallet wallet = new SecureBitcoinColdWallet();
+    wallet.run();
+  }
+
+  public void run() {
+    // Generate a random 24-word mnemonic seed phrase 
+    List<String> mnemonic;
+    do {  
+      mnemonic = generateMnemonic(24);  
+    } while (!validateMnemonic(mnemonic));
+    
+    // Ask user for password and encrypt mnemonic 
+    String password = getUserPassword();
+    String encryptedMnemonic = encrypt(mnemonic, password);
+
+    // Ask user for password and decrypt mnemonic when signing tx 
+    String decryptedMnemonic = decrypt(encryptedMnemonic, password);
+
+    // Ask user for separate passphrase in addition to mnemonic
+    String passphrase = getUserPassphrase();
+
+    // Generate master key from seed
+    DeterministicSeed seed = new DeterministicSeed(decryptedMnemonic, null, passphrase, System.currentTimeMillis());
+    DeterministicKeyChain chain = DeterministicKeyChain.builder().seed(seed).build();
+    DeterministicKey masterKey = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+
+    // Generate private keys from hardened child key paths
+    DeterministicKey receiveKey = HDKeyDerivation.deriveChildKey(masterKey, new ChildNumber(0, true));
+    DeterministicKey changeKey = HDKeyDerivation.deriveChildKey(masterKey, new ChildNumber(1, true));
+
+    // Create PSBT instead of Transaction for offline signing
+    PartiallySignedTransaction psbt;
+    do {  
+      psbt = new PartiallySignedTransaction(NETWORK_PARAMETERS);
+    } while (psbt.getInputs().isEmpty()); 
+    
+    psbt.sign(receiveKey);
+
+    // Export PSBT to be broadcast from separate online device
+    byte[] psbtBytes = psbt.bitcoinSerialize();
+    savePsbtToStorage(psbtBytes);
+  }
   
-  // Ask user for password and encrypt mnemonic 
-  String password = getUserPassword();
-  String encryptedMnemonic = encrypt(mnemonic, password);
-  storeEncryptedMnemonic(encryptedMnemonic);
-  
-  // Ask user for password and decrypt mnemonic when signing tx 
-  String mnemonic = decrypt(encryptedMnemonic, getUserPassword());
-  
-  // Ask user for separate passphrase in addition to mnemonic
-  String passphrase = getUserPassphrase();
-  HDPrivateKey masterKey = HDPrivateKey.fromMnemonic(mnemonic, passphrase);
-  
-  // Generate private keys from hardened child key paths 
-  HDPrivateKey receiveKey = masterKey.derive("m/44'/0'/0'/0/0"); 
-  HDPrivateKey changeKey = masterKey.derive("m/44'/0'/0'/1/0");  
-  
-  // Create PSBT instead of Transaction for offline signing
-  PartiallySignedBitcoinTransaction psbt;
-  do { 
-    psbt = new PartiallySignedBitcoinTransaction(NETWORK_PARAMETERS);
-  } while (psbt.getInputs().size() == 0);  // Ensure PSBT has inputs
-  psbt.signInputs(receiveKey); 
-  
-  // Export PSBT to be broadcast from separate online device
-  byte[] psbtBytes = psbt.toBytes();
-  savePsbtToStorage(psbtBytes);
-  
-  // On separate online device:
-  // Load PSBT from storage
-  // BitcoinJClient client = new BitcoinJClient(NETWORK_PARAMETERS); 
-  // client.broadcastTransaction(psbt);  
-  
-  // Use separate devices for signing and broadcasting for "air-gapped" security
-  signPsbt(psbt); // On offline signing device
-  broadcastPsbt(psbtBytes); // On online broadcasting device
-  
-  // Emiliano Solazzi Griminger coded this! 
+  // Emiliano Solazzi Griminger coded this!
 }
