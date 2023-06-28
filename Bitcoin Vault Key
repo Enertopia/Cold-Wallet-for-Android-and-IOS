@@ -1,73 +1,91 @@
-public class SecureBitcoinColdWallet extends Application {
-  // Hot wallet, cold wallet
-  private Wallet hotWallet;
-  private Wallet coldWallet;
-  
-  private KeyCipher keyCipher;
-  private String password;
-  
-  public void onCreate() {
-    // Disable all network connectivity when app launches
-    disableNetworkAccess(); 
-    
-    // Prompt user to enter password to access cold wallet
-    password = promptForPassword();
-    
-    if (password != null) {
-      // Decrypt cold wallet private keys with entered password
-      coldWallet = decryptColdWallet(password); 
-      
-      // Enable network connectivity for hot wallet and full node
-      enableNetworkAccessFor(hotWallet, fullNode); 
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
+
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+
+public class SecureBitcoinColdWallet {
+    private static final NetworkParameters NETWORK_PARAMETERS = NetworkParameters.prodNet();
+    private static final String WALLET_FILE_PATH = "path/to/wallet/file";
+
+    private WalletAppKit walletAppKit;
+    private Wallet hotWallet;
+    private Wallet coldWallet;
+
+    public static void main(String[] args) {
+        SecureBitcoinColdWallet wallet = new SecureBitcoinColdWallet();
+        wallet.run();
     }
-  }
-  
-  public void accessColdWallet() {
-    // Disable all network connectivity 
-    disableNetworkAccess();  
-    
-    // Prompt user to enter password to access cold wallet
-    password = promptForPassword();
-    
-    if (password != null) {
-      // Decrypt cold wallet private keys with entered password
-      coldWallet = decryptColdWallet(password); 
-      
-      // Connect cold wallet to full node
-      connectColdWalletToNode();
-      
-      // Allow user to view balance, send/receive transactions, etc. using coldWallet
+
+    public void run() {
+        initializeWalletAppKit();
+        initializeHotWallet();
+        initializeColdWallet();
+
+        // Enable network connectivity for hot wallet and full node
+        enableNetworkAccess();
+
+        // Allow user to interact with the hot wallet and perform transactions
+
+        // When finished, close the wallets and disable network connectivity
+        closeWallets();
+        disableNetworkAccess();
     }
-    
-    // Encrypt cold wallet private keys and wipe from memory
-    encryptAndWipeColdWallet();
-    
-    // Re-enable network connectivity only for hot wallet and full node
-    enableNetworkAccessFor(hotWallet, fullNode);
-  }
-  
-  public void closeColdWallet() {
-    // Disable all network connectivity
-    disableNetworkAccess();
-    
-    // Encrypt cold wallet private keys and wipe from memory
-    encryptAndWipeColdWallet();
-  }
-  
-  private Wallet generateOrLoadHotWallet() {
-    // Generate a new wallet or load an existing one for the hot wallet
-    // Return the Wallet object
-  }
-  
-  private Wallet decryptColdWallet(String password) {
-    // Decrypt the encrypted cold wallet private keys using the entered password
-    // Return the Wallet object
-  }
-  
-  private void encryptAndWipeColdWallet() {
-    // Encrypt the cold wallet private keys
-    // Wipe the cold wallet and keys from memory
-  }
-  
-  // Remaining methods... (disableNetworkAccess(), enableNetworkAccess(), etc.)
+
+    private void initializeWalletAppKit() {
+        walletAppKit = new WalletAppKit(NETWORK_PARAMETERS, new File(WALLET_FILE_PATH), "password") {
+            @Override
+            protected void onSetupCompleted() {
+                wallet().addChangeEventListener(new WalletChangeEventListener() {
+                    @Override
+                    public void onWalletChanged(Wallet wallet) {
+                        // Handle wallet change events if needed
+                    }
+                });
+            }
+        };
+        walletAppKit.setAutoSave(true);
+        walletAppKit.setBlockingStartup(false);
+        walletAppKit.startAsync();
+        walletAppKit.awaitRunning();
+    }
+
+    private void initializeHotWallet() {
+        hotWallet = walletAppKit.wallet();
+    }
+
+    private void initializeColdWallet() {
+        // Load or generate the cold wallet
+        coldWallet = loadOrGenerateColdWallet();
+    }
+
+    private Wallet loadOrGenerateColdWallet() {
+        // Implement the logic to load or generate the cold wallet
+        return null;
+    }
+
+    private void enableNetworkAccess() {
+        walletAppKit.peerGroup().setMaxConnections(8);
+        walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.01);
+        walletAppKit.peerGroup().addAddress(Utils.localHostNameToIpAddress("192.168.1.10"));
+        walletAppKit.peerGroup().start();
+        walletAppKit.peerGroup().waitForPeers(1).get(5, TimeUnit.SECONDS);
+    }
+
+    private void closeWallets() {
+        walletAppKit.stopAsync();
+        walletAppKit.awaitTerminated();
+        hotWallet = null;
+        coldWallet = null;
+    }
+
+    private void disableNetworkAccess() {
+        walletAppKit.peerGroup().stop();
+        walletAppKit.peerGroup().waitForStop();
+    }
+
+    // Emiliano Solazzi Griminger coded this!
 }
