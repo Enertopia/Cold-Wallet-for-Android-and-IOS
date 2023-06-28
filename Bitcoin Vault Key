@@ -1,56 +1,58 @@
-import org.bitcoinj.core.NetworkParameters;  
-import org.bitcoinj.core.PartiallySignedTransaction;
-import org.bitcoinj.crypto.*;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.DeterministicKeyChain;
-import org.bitcoinj.wallet.KeyChain;
-import org.bitcoinj.wallet.Wallet;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.List;
-
 public class SecureBitcoinColdWallet extends Application {
-  private static final NetworkParameters NETWORK_PARAMETERS = NetworkParameters.prodNet();
-
-  public static void main(String[] args) {
-    // Disable all network connectivity including WiFi, Bluetooth and cellular
-    disableAllNetworkAccess();  
+  // Hot and cold wallets
+  private Wallet hotWallet;
+  private Wallet coldWallet;
+  
+  public void onCreate() {
+    // Disable network connectivity for 5 seconds to prevent exposure window
+    disableNetworkAccessFor(5000);  
     
-    SecureBitcoinColdWallet wallet = new SecureBitcoinColdWallet();
-    wallet.run();
+    // Generate or load hot and cold wallets
+    hotWallet = generateOrLoadHotWallet();
+    coldWallet = generateOrLoadColdWallet();
     
-    // Re-enable network access
-    enableNetworkAccess();
-  }
-
-  public void run() {
-    // Load encrypted password and mnemonic from secure offline storage
-    String password = loadPasswordFromStorage();
-    String encryptedMnemonic = loadMnemonicFromStorage();
-    
-    // Decrypt mnemonic 
-    String mnemonic = decrypt(encryptedMnemonic, password);
-    
-    // Ask user for separate passphrase in addition to mnemonic
-    String passphrase = getUserPassphrase();
-
-    // Generate master key from seed
-    DeterministicSeed seed = new DeterministicSeed(mnemonic, null, passphrase, System.currentTimeMillis());
-    DeterministicKeyChain chain = DeterministicKeyChain.builder().seed(seed).build();
-    DeterministicKey masterKey = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
-
-    // Generate private keys from hardened child key paths
-    DeterministicKey receiveKey = HDKeyDerivation.deriveChildKey(masterKey, new ChildNumber(0, true));
-    DeterministicKey changeKey = HDKeyDerivation.deriveChildKey(masterKey, new ChildNumber(1, true));
-
-    // ... (remainder of code unchanged)
+    // Re-enable network connectivity for hot wallet
+    enableNetworkAccessFor(hotWallet);
   }
   
-  // Coded by Emiliano Solazzi Griminger
+  public void accessColdWallet() {
+    // Disable all network connectivity 
+    disableNetworkAccess();  
+    
+    // Allow user to view balance, send/receive transactions, etc. using coldWallet
+  }
+  
+  public void closeColdWallet() {
+    // Re-enable network connectivity
+    enableNetworkAccess();
+  }
+  
+  private Wallet generateOrLoadHotWallet() {
+    // Generate a new wallet or load an existing one for the hot wallet
+    // Return the Wallet object
+  }
+  
+  private Wallet generateOrLoadColdWallet() {
+    // Generate a new wallet or load an existing one for the cold wallet
+    // Return the Wallet object
+  }
+  
+  private void disableNetworkAccess() {
+    // Call Android/iOS APIs to disable WiFi, Bluetooth and cellular data
+  }
+  
+  private void disableNetworkAccessFor(int milliseconds) {
+    // Call Android/iOS APIs to disable WiFi, Bluetooth and cellular data
+    // Wait for the specified time in milliseconds
+    // Re-enable network connectivity 
+  }
+  
+  private void enableNetworkAccess() {
+    // Call Android/iOS APIs to re-enable WiFi, Bluetooth and cellular data
+  }
+  
+  private void enableNetworkAccessFor(Wallet wallet) {
+    // Call Android/iOS APIs to re-enable WiFi, Bluetooth and cellular data
+    // Limit connectivity to only the APIs required by the wallet
+  }
 }
