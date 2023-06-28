@@ -1,0 +1,88 @@
+class SecureBitcoinColdWallet: UIApplication {
+  // Hot wallet, cold wallet
+  var hotWallet: Wallet!
+  var coldWallet: Wallet!
+  
+  var keyCipher: KeyCipher!
+  var password: String!
+  var backupPassword: String!
+  
+  override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // Disable all network connectivity when app launches
+    disableNetworkAccess() 
+    
+    // Prompt user to enter password and backup password to access cold wallet
+    password = promptForPassword()
+    backupPassword = promptForBackupPassword()
+    
+    guard password != nil && backupPassword != nil else {
+      return false 
+    }
+    
+    // Decrypt cold wallet private keys with entered password
+    coldWallet = decryptColdWallet(password: password) 
+    
+    // Require user to back up encrypted cold wallet file
+    requireColdWalletBackup(backupPassword: backupPassword)  
+    
+    // Enable network connectivity for hot wallet and full node
+    enableNetworkAccessFor(hotWallet: hotWallet, fullNode: fullNode)
+  }
+  
+  func accessColdWallet() {
+    // Disable all network connectivity 
+    disableNetworkAccess()  
+    
+    // Prompt user to enter password to access cold wallet
+    password = promptForPassword()
+    
+    guard password != nil else {
+      return 
+    }
+    
+    // Decrypt cold wallet private keys with entered password
+    coldWallet = decryptColdWallet(password: password)   
+    
+    // Connect cold wallet to full node
+    connectColdWalletToNode()
+    
+    // Allow user to view balance, send/receive transactions, etc. using coldWallet
+  }
+  
+  func closeColdWallet() {
+    // Disable all network connectivity
+    disableNetworkAccess()
+    
+    // Encrypt cold wallet private keys and wipe from memory
+    encryptAndWipeColdWallet()
+  }
+  
+  private func requireColdWalletBackup(backupPassword: String) {
+    // Prompt user to back up encrypted cold wallet file
+    // Require entry of backup password to encrypt the backup file
+    // Handle backup process and encryption of backup file
+    guard backupPassword != nil else {
+      return 
+    }
+  }
+  
+  private func decryptColdWallet(password: String) -> Wallet {
+    // Decrypt the encrypted cold wallet private keys using the entered password
+    // Check that password is valid before decrypting keys
+    guard password != nil else {
+      return nil
+    }
+    // Return the Wallet object
+  }
+  
+  private func encryptAndWipeColdWallet() {
+    // Encrypt the cold wallet private keys
+    // Wipe the cold wallet and keys from memory
+    // Check that coldWallet is not null before encrypting
+    guard coldWallet != nil else {
+      return 
+    }
+  }
+  
+  // Remaining methods... (disableNetworkAccess(), enableNetworkAccess(), etc.)
+}
