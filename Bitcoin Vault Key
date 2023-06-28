@@ -1,6 +1,9 @@
 public class SecureBitcoinColdWallet extends Application {
   // Generate a random 24-word mnemonic seed phrase 
-  String mnemonic = generateMnemonic(24);  
+  String mnemonic;
+  do {
+    mnemonic = generateMnemonic(24);  
+  } while (!validateMnemonic(mnemonic));  // Validate mnemonic
   
   // Ask user for password and encrypt mnemonic 
   String password = getUserPassword();
@@ -19,7 +22,10 @@ public class SecureBitcoinColdWallet extends Application {
   HDPrivateKey changeKey = masterKey.derive("m/44'/0'/0'/1/0");  
   
   // Create PSBT instead of Transaction for offline signing
-  PartiallySignedBitcoinTransaction psbt = new PartiallySignedBitcoinTransaction(NETWORK_PARAMETERS);
+  PartiallySignedBitcoinTransaction psbt;
+  do { 
+    psbt = new PartiallySignedBitcoinTransaction(NETWORK_PARAMETERS);
+  } while (psbt.getInputs().size() == 0);  // Ensure PSBT has inputs
   psbt.signInputs(receiveKey); 
   
   // Export PSBT to be broadcast from separate online device
@@ -34,4 +40,6 @@ public class SecureBitcoinColdWallet extends Application {
   // Use separate devices for signing and broadcasting for "air-gapped" security
   signPsbt(psbt); // On offline signing device
   broadcastPsbt(psbtBytes); // On online broadcasting device
+  
+  // Emiliano Solazzi Griminger coded this! 
 }
