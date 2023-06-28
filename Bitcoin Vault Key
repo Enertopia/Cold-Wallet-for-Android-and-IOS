@@ -1,0 +1,37 @@
+public class SecureBitcoinColdWallet extends Application {
+  // Generate a random 24-word mnemonic seed phrase 
+  String mnemonic = generateMnemonic(24);  
+  
+  // Ask user for password and encrypt mnemonic 
+  String password = getUserPassword();
+  String encryptedMnemonic = encrypt(mnemonic, password);
+  storeEncryptedMnemonic(encryptedMnemonic);
+  
+  // Ask user for password and decrypt mnemonic when signing tx 
+  String mnemonic = decrypt(encryptedMnemonic, getUserPassword());
+  
+  // Ask user for separate passphrase in addition to mnemonic
+  String passphrase = getUserPassphrase();
+  HDPrivateKey masterKey = HDPrivateKey.fromMnemonic(mnemonic, passphrase);
+  
+  // Generate private keys from hardened child key paths 
+  HDPrivateKey receiveKey = masterKey.derive("m/44'/0'/0'/0/0"); 
+  HDPrivateKey changeKey = masterKey.derive("m/44'/0'/0'/1/0");  
+  
+  // Create PSBT instead of Transaction for offline signing
+  PartiallySignedBitcoinTransaction psbt = new PartiallySignedBitcoinTransaction(NETWORK_PARAMETERS);
+  psbt.signInputs(receiveKey); 
+  
+  // Export PSBT to be broadcast from separate online device
+  byte[] psbtBytes = psbt.toBytes();
+  savePsbtToStorage(psbtBytes);
+  
+  // On separate online device:
+  // Load PSBT from storage
+  // BitcoinJClient client = new BitcoinJClient(NETWORK_PARAMETERS); 
+  // client.broadcastTransaction(psbt);  
+  
+  // Use separate devices for signing and broadcasting for "air-gapped" security
+  signPsbt(psbt); // On offline signing device
+  broadcastPsbt(psbtBytes); // On online broadcasting device
+}
