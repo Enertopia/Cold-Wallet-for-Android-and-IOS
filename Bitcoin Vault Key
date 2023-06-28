@@ -1,30 +1,48 @@
 public class SecureBitcoinColdWallet extends Application {
-  // Hot and cold wallets
+  // Hot wallet, cold wallet, full node
   private Wallet hotWallet;
   private Wallet coldWallet;
+  private Node fullNode;
   
   public void onCreate() {
-    // Disable network connectivity for 5 seconds to prevent exposure window
+    // Disable network connectivity for 5 seconds 
     disableNetworkAccessFor(5000);  
     
-    // Generate or load hot and cold wallets
+    // Generate or load wallets and connect to full node
     hotWallet = generateOrLoadHotWallet();
+    connectHotWalletToNode();
+    
     coldWallet = generateOrLoadColdWallet();
     
-    // Re-enable network connectivity for hot wallet
-    enableNetworkAccessFor(hotWallet);
+    // Re-enable network connectivity for hot wallet and node if hot wallet is synced
+    if (hotWallet.isSyncedWithNode()) {
+      enableNetworkAccessFor(hotWallet, fullNode); 
+    } else {
+      // Wait and re-check sync status again before enabling connectivity
+    }
   }
   
   public void accessColdWallet() {
     // Disable all network connectivity 
     disableNetworkAccess();  
     
+    // Check if connectivity is disabled
+    if (!isNetworkAccessDisabled()) {
+      // Warn the user and do not connect the cold wallet to the full node
+    } else {
+      // Connect cold wallet to full node only once connectivity is confirmed disabled
+      connectColdWalletToNode();
+    }
+    
     // Allow user to view balance, send/receive transactions, etc. using coldWallet
+    
+    // Disconnect cold wallet from full node
+    disconnectColdWalletFromNode();
   }
   
   public void closeColdWallet() {
-    // Re-enable network connectivity
-    enableNetworkAccess();
+    // Re-enable network connectivity only for hot wallet and full node
+    enableNetworkAccessFor(hotWallet, fullNode); 
   }
   
   private Wallet generateOrLoadHotWallet() {
@@ -37,22 +55,30 @@ public class SecureBitcoinColdWallet extends Application {
     // Return the Wallet object
   }
   
-  private void disableNetworkAccess() {
-    // Call Android/iOS APIs to disable WiFi, Bluetooth and cellular data
+  private void connectHotWalletToNode() {
+    // Set the full node address and port
+    String nodeAddress = "192.168.1.10";
+    int nodePort = 8333;
+    
+    // Connect the hot wallet to the full node
+    hotWallet.connectToNode(nodeAddress, nodePort);
+    
+    // Sync the hot wallet with the full node's blockchain data
+    hotWallet.syncWithNode(); 
   }
   
-  private void disableNetworkAccessFor(int milliseconds) {
-    // Call Android/iOS APIs to disable WiFi, Bluetooth and cellular data
-    // Wait for the specified time in milliseconds
-    // Re-enable network connectivity 
+  private void connectColdWalletToNode() {
+    // Connect the cold wallet to the full node
+    coldWallet.connectToNode(nodeAddress, nodePort);
   }
   
-  private void enableNetworkAccess() {
-    // Call Android/iOS APIs to re-enable WiFi, Bluetooth and cellular data
+  private void disconnectColdWalletFromNode() {
+    // Disconnect the cold wallet from the full node
+    coldWallet.disconnectFromNode();
   }
   
-  private void enableNetworkAccessFor(Wallet wallet) {
-    // Call Android/iOS APIs to re-enable WiFi, Bluetooth and cellular data
-    // Limit connectivity to only the APIs required by the wallet
-  }
+  // Remaining methods... (disableNetworkAccess(), enableNetworkAccess(), etc.)
+  
+  // When launching Bitcoin Core to run the full node
+  bitcoinCore.disableOutgoingConnections(); 
 }
