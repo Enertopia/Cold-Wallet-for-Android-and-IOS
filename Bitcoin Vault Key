@@ -1,98 +1,100 @@
-import android.app.Application;  
-import android.security.keystore.KeyGenParameterSpec;  
-import android.security.keystore.KeyProperties;  
-import android.util.Base64;  
-
-import javax.crypto.Cipher;  
-import javax.crypto.KeyGenerator;  
-import javax.crypto.SecretKey;  
-import java.nio.charset.StandardCharsets;  
-import java.security.KeyStore;  
-import java.util.Arrays;  
-
 public class SecureBitcoinColdWallet extends Application {
     // Constants
     private static final String KEY_ALIAS = "secure_cold_wallet_key";
-    private static final String COLD_WALLET_BACKUP_FILENAME = "cold_wallet_backup.txt";
-
-    // Hot wallet, cold wallet
+    private static final int PASSWORD_LENGTH = 8;
+    private static final String AES_ALGORITHM = "AES/CBC/PKCS7Padding";
+    
+    // Wallets
     private Wallet hotWallet;
     private Wallet coldWallet;
-
-    private KeyCipher keyCipher;
-    private String password;
-
+    
+    // Cipher for encrypting/decrypting cold wallet
+    private Cipher cipher;  
+    
+    // Password for accessing cold wallet
+    private char[] password;  
+    
+    @Override
     public void onCreate() {
-        // Disable all network connectivity when app launches
-        disableNetworkAccess();  
-
-        // Prompt user to enter password to access cold wallet
-        password = promptForPassword();
-
+        // Disable network connectivity on app launch
+        disableNetworkAccess();   
+        
+        // Prompt user to enter password for cold wallet access
+        password = promptForPassword(PASSWORD_LENGTH); 
+        
         if (password != null) {  
+            // Generate random file name for backup
+            String backupFileName = generateRandomFileName();
+            
+            // Generate new key in Android Keystore from user's password
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            keyGenerator.init(new KeyGenParameterSpec.Builder(KEY_ALIAS, 
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .build());
+            keyGenerator.generateKey();
+            
+            // Encrypt cold wallet keys using key from Keystore
+            byte[] encryptedKeys = encryptColdWalletKeys(keyStore, KEY_ALIAS, AES_ALGORITHM);
+            
+            // Save encryptedKeys to file and wipe from memory
+            saveEncryptedKeysToFile(backupFileName, encryptedKeys);
+            encryptedKeys = null; 
+            
             // Require user to back up encrypted cold wallet file
-            requireColdWalletBackup(); 
-
-            // Decrypt cold wallet private keys with entered password
-            coldWallet = decryptColdWallet(password);  
-
-            // Check that coldWallet is not null before enabling access
-            if (coldWallet != null) {
-                // Enable network connectivity for hot wallet and full node
-                enableNetworkAccessFor(hotWallet, fullNode);
-            }
+            requireColdWalletBackup(backupFileName);  
+            
+            // Wipe password from memory
+            password = null;
+            
+            // Enable network access for hot wallet and full node 
+            enableNetworkAccess(hotWallet, fullNode);
         }
     }
 
     public void accessColdWallet() {
-        // Disable all network connectivity
-        disableNetworkAccess();  
-
-        // Prompt user to enter password to access cold wallet
-        password = promptForPassword();
-
-        if (password != null) {  
-            // Decrypt cold wallet private keys with entered password
-            coldWallet = decryptColdWallet(password);   
-
-            // Check that coldWallet is not null before connecting
-            if (coldWallet != null) {
-                // Connect cold wallet to full node
-                connectColdWalletToNode();
-
-                // Allow user to view balance, send/receive transactions, etc. using coldWallet
-            }
+        // Disable network connectivity
+        disableNetworkAccess();   
+        
+        // Prompt user to enter password for cold wallet access
+        password = promptForPassword(PASSWORD_LENGTH); 
+        
+        if (password != null) {
+            // Generate new key in Android Keystore from user's password
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            keyGenerator.init(new KeyGenParameterSpec.Builder(KEY_ALIAS, 
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .build());
+            keyGenerator.generateKey();
+            
+            // Decrypt cold wallet keys using new key from Keystore
+            byte[] decryptedKeys = decryptColdWalletKeys(keyStore, KEY_ALIAS, AES_ALGORITHM); 
+            
+            // Load Wallet object from decrypted keys
+            coldWallet = loadWalletFromDecryptedKeys(decryptedKeys);  
+            
+            // Connect cold wallet to full node 
+            connectColdWalletToNode();  
+            
+            // Allow user to view balance, send/receive transactions, etc. using coldWallet
+            
+            // Wipe decrypted keys and password from memory
+            decryptedKeys = null;
+            password = null;
         }
-
-        // Check that coldWallet is not null before encrypting
-        if (coldWallet != null) {
-            // Encrypt cold wallet private keys and wipe from memory
-            encryptAndWipeColdWallet(); 
-        }
-
-        // Re-enable network connectivity only for hot wallet and full node
-        enableNetworkAccessFor(hotWallet, fullNode);
+        
+        // Re-enable network access for hot wallet and full node
+        enableNetworkAccess(hotWallet, fullNode);
     }
 
     // Remaining methods...
-
-    private void requireColdWalletBackup() {
-        // Prompt user to back up encrypted cold wallet file
-        // Require entry of backup password to encrypt the backup file
-        // Handle backup process and encryption of COLD_WALLET_BACKUP_FILENAME file
-        if (password == null) return; 
-    }
-
-    private Wallet decryptColdWallet(String password) {
-        // Check that password is valid before decrypting keys
-        if (password == null) return null;  
-
-        // Decrypt the encrypted cold wallet private keys using the entered password
-        // Return the Wallet object
-    }
-    
-    // Non-functional command to indicate the author
-    private void codedByEmilianoSolazziGriminger() {
-        System.out.println("Coded by Emiliano Solazzi Griminger");
-    }
 }
