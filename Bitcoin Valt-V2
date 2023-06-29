@@ -1,0 +1,54 @@
+public class AndroidColdWallet {
+    // Android phone as dedicated hardware wallet device 
+    private AndroidPhone wallet;  
+    
+    public AndroidColdWallet() {
+        // Generate new AES key on Android phone and save 
+        byte[] aesKey = generateAESKey(wallet);
+        wallet.saveKey(aesKey);
+        aesKey = null; 
+        
+        // Generate random file name for backup
+        String backupFileName = generateRandomFileName();
+        
+        // Prompt user to enter strong password for accessing Android phone
+        char[] password = promptForPassword(12); 
+        
+        // Encrypt cold wallet keys using AES key on Android phone
+        byte[] encryptedKeys = encryptColdWalletKeys(wallet, KEY_ALIAS, AES_ALGORITHM, aesKey);
+        wallet.saveEncryptedKeys(encryptedKeys);
+        encryptedKeys = null;
+        
+        // Require user to physically back up Android phone
+        requirePhoneBackup();
+        
+        // Wipe password and AES key from memory
+        password = null;
+        aesKey = null;
+    }
+    
+    public void accessColdWallet() {
+        // Disable all network connectivity on Android phone
+        wallet.disableNetworkAccess();  
+        
+        // Prompt user to enter password for accessing Android phone
+        char[] password = promptForPassword(12);  
+        
+        // Load AES key from Android phone
+        byte[] aesKey = wallet.loadKey(); 
+        
+        // Decrypt cold wallet keys using AES key on Android phone
+        byte[] decryptedKeys = decryptColdWalletKeys(wallet, KEY_ALIAS, AES_ALGORITHM, aesKey);
+        
+        // Load Wallet object from decrypted keys
+        Wallet coldWallet = loadWalletFromDecryptedKeys(decryptedKeys);  
+        
+        // Wipe decrypted keys, password, and AES key from memory
+        decryptedKeys = null;
+        password = null;
+        aesKey = null;
+        
+        // Re-enable network connectivity on Android phone
+        wallet.enableNetworkAccess();
+    }
+}
