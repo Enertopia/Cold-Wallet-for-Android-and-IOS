@@ -1,0 +1,53 @@
+package com.yourcompany.coldwallet;
+
+public class ColdWallet {
+    // Main entry point for the cold wallet system 
+}
+
+package com.yourcompany.coldwallet.storage;
+
+public class AndroidPhone {
+    // Represents the offline Android phone used for storage 
+}
+
+package com.yourcompany.coldwallet.security;
+
+public class QTEESession {
+    // Manages the QTEE session and secure storage
+}
+
+package com.yourcompany.coldwallet.wallet;
+
+public class Wallet {
+    // Base wallet class with common methods
+}
+
+public class BitcoinWallet extends Wallet {
+    // Bitcoin wallet 
+}
+
+public class EthereumWallet extends Wallet {
+    // Ethereum wallet
+}
+
+package com.yourcompany.coldwallet.tokens;
+
+public class TokenWallet extends Wallet {
+    // Represents a wallet for an ERC-20 or other token
+}
+
+package com.yourcompany.coldwallet.fullnode;
+
+public class FullNode {
+    // Represents the full node used for verifying transactions
+}
+
+package com.yourcompany.coldwallet.utils;
+
+public class CryptoUtils {
+    // Utility methods for encryption, decryption, key generation, etc. 
+}
+
+public class PassphraseUtils {
+    // Utility methods for generating passphrases 
+}
