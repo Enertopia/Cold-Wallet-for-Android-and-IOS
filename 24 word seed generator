@@ -1,0 +1,43 @@
+import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.ArrayList;
+import java.util.List;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
+public String generateSeedPhrase() {
+    String[] words = {
+        // List of 4096 words omitted for brevity
+    };
+    
+    SecureRandom random = new SecureRandom();
+    List<String> seedPhrase = new ArrayList<>();
+    for (int i = 0; i < 24; i++) {
+        int index = random.nextInt(words.length);
+        seedPhrase.add(words[index]);
+    }
+    
+    String seedPhraseStr = String.join(" ", seedPhrase);
+    System.out.println("Please re-enter the seed phrase to confirm: ");
+    String confirmation = Scanner.nextLine();
+    while (!confirmation.equals(seedPhraseStr)) {
+        System.out.println("Seed phrases do not match. Please re-enter: ");
+        confirmation = Scanner.nextLine();
+    }
+    
+    byte[] salt = SecureRandom.getInstance("SHA1PRNG").generateSeed(32);
+    int iterations = 100_000; 
+    char[] passphrase = "mypassphrase".toCharArray(); 
+    KeySpec spec = new PBEKeySpec(passphrase, salt, iterations, 256);
+    SecretKeyFactory skf;
+    try {
+        skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+    } catch (NoSuchAlgorithmException e) {
+        throw new AssertionError("Java 8 supports PBKDF2WithHmacSHA512");
+    }
+    byte[] seed = skf.generateSecret(spec).getEncoded();
+    
+    return seedPhraseStr; 
+}
