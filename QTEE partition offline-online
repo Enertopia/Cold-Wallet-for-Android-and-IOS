@@ -1,0 +1,52 @@
+public class QTEEOfflineStorage {
+    // QTEE instance for offline storage
+    private QTEE offlineQTEE;  
+    
+    // QTEE instance for online functionality 
+    private QTEE onlineQTEE;
+    
+    // Passphrase to unlock offline QTEE
+    private char[] offlinePassphrase; 
+    
+    public QTEEOfflineStorage() {
+        // Generate offline QTEE and passphrase 
+        offlineQTEE = QTEE.generateInstance();
+        offlinePassphrase = generatePassphrase(12);
+        
+        // Store private keys and other sensitive data in offline QTEE
+        offlineQTEE.storeData("private_keys", privateKeys);
+        
+        // Generate separate online QTEE for networked use
+        onlineQTEE = QTEE.generateInstance();
+    }
+    
+    public void goOnline() {
+        // Disable offline QTEE and wipe passphrase from memory
+        offlineQTEE.disable();
+        offlinePassphrase = null; 
+        
+        // Enable online QTEE 
+        onlineQTEE.enable();
+    }
+    
+    public void goOffline() {
+        // Disable online QTEE 
+        onlineQTEE.disable();
+        
+        // Re-enable offline QTEE with passphrase
+        offlineQTEE.enable(offlinePassphrase); 
+        
+        // Wipe passphrase from memory 
+        offlinePassphrase = null;
+    }
+    
+    public byte[] getOfflineData(String alias) {
+        // Ensure device is offline 
+        if (onlineQTEE.isEnabled()) {
+            throw new SecurityException("Device must be offline!");
+        }
+        
+        // Get data from offline QTEE using passphrase 
+        return offlineQTEE.getData(alias, offlinePassphrase);
+    }
+}
