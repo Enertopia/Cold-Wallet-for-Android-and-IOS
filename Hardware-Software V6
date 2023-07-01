@@ -2,77 +2,87 @@ public class AndroidColdWallet extends Application {
   
   // ... (Existing variables)
   
-  // List of approved recipient addresses
-  private List<String> approvedAddresses;
+  // Seed phrase
+  private byte[] seedPhrase;
   
-  // Incorrect PIN attempt counter
-  private int incorrectPins = 0;
+  // Encryption key for secure enclave
+  private SecretKey enclaveKey;
   
-  // Max PIN attempts before wipe
-  private final int MAX_ATTEMPTS = 3;
+  // ...
   
   @Override
   public void onCreate() {
     // ... (Existing logic)
     
-    // Initialize list of approved recipient addresses
-    approvedAddresses = new ArrayList<>();
+    // Generate encryption key for secure enclave
+    enclaveKey = generateSecretKey();
   }
   
   // Generate new wallet offline
-  public String generateWalletOffline() {
+  public void generateWalletOffline() {
     // Disable network access
     goOffline();
     
-    String seedPhrase = generateSeedPhrase();  
+    // Generate random seed phrase
+    seedPhrase = generateSeedPhraseAsBytes();  
     
-    // Store seed phrase in secure enclave
-    strongboxStorage.storeData("seed_phrase", seedPhrase.getBytes());
+    // Encrypt seed phrase with enclave key
+    byte[] encryptedSeed = encrypt(seedPhrase, enclaveKey);
+    
+    // Store encrypted seed in secure enclave
+    strongboxStorage.storeData("encrypted_seed", encryptedSeed);
     
     // Re-enable network access
     goOnline();
-    
-    return seedPhrase;
   }
   
   public void unlockApp() {
-    if (biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS) {
-      biometricPrompt.authenticate();
-    }
+    // ... (Existing logic)
     
-    // Prompt for PIN/passphrase and verify
-    String pin = enterPin();
-    if (checkPin(pin)) {
-      return;
-    } else {
-      // Wipe secure enclave after max incorrect PIN attempts
-      if (incorrectPins >= MAX_ATTEMPTS) {
-        strongboxStorage.wipeStorage();
-      }
-      incorrectPins++;
+    // Verify secure enclave attestation
+    if (!strongboxStorage.verifyAttestation()) {
+      showErrorAndExit("Secure enclave compromised!");
     }
   }
   
   // Only allow sending to approved recipient addresses
   public Transaction signTransaction(String walletType, Transaction tx) {
-    String recipient = tx.getRecipientAddress();
-    if (!approvedAddresses.contains(recipient)) {
-      // Prompt user to approve new recipient address
-      // ...
-    }
-  }
-  
-  // Only sign transactions, do not broadcast
-  public Transaction signTransactionOffline(String walletType, Transaction tx) {
-    // ...
-    return signedTx;
+    // ... (Existing logic)
+    
+    // Use password transformation for PIN input
+    String pin = passwordTransform(enterPin()); 
   }
   
   // Check for Android OS and app integrity
   public boolean checkIntegrity() {
-    // Use SafetyNet API and app hash to detect tampering
-    // ...
+    // ... (Existing logic)
+    
+    // Implement additional hardening
+    if (isDebuggerAttached() || isRooted() || !validateCertificates()) {
+      showErrorAndExit("Threat detected!"); 
+    }
   }
   
   // ... (Additional methods)
+  
+  private byte[] generateSeedPhraseAsBytes() {
+    // Generate random byte array for seed phrase
+    byte[] seed = new byte[32];
+    random.nextBytes(seed);
+    return seed;
+  }
+  
+  private SecretKey generateSecretKey() {
+    // Generate random secret key for enclave encryption
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    return keyGen.generateKey();
+  }
+  
+  private byte[] encrypt(byte[] data, SecretKey key) {
+    // Encrypt data with secret key
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.ENCRYPT_MODE, key);
+    return cipher.doFinal(data);
+  }
 }
