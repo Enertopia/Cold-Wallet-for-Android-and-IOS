@@ -1,0 +1,92 @@
+/*
+ * OfflineQTEEStorage.java
+ * Securely stores sensitive data in an offline QTEE while allowing online functionality
+ * 
+ * Coded by Emiliano Solazzi Griminger
+ */
+
+public class OfflineQTEEStorage {
+    // QTEE instance for offline storage
+    private QTEE offlineQTEE;  
+    
+    // QTEE instance for online use
+    private QTEE onlineQTEE;
+    
+    // Passphrase to unlock offline QTEE
+    private char[] offlinePassphrase;
+    
+    // Key derived from offline passphrase
+    private byte[] offlineKey; 
+    
+    // Salt for offline QTEE
+    private byte[] qteeSalt;
+    
+    // Duress passphrase to wipe offline QTEE
+    private char[] duressPassphrase;
+    
+    /*
+     * Constructor - Generates offline QTEE, passphrase, key and salt.
+     * Generates online QTEE. Sets duress passphrase to wipe offline QTEE.
+     */
+    public OfflineQTEEStorage() {
+        // Generate random salt for offline QTEE
+        qteeSalt = SecureRandom.getInstance("SHA1PRNG").generateSeed(32);
+        
+        // Generate offline QTEE, passphrase and key 
+        offlineQTEE = QTEE.generateInstance(qteeSalt);
+        offlinePassphrase = generatePassphrase(24);
+        offlineKey = generateKey(offlinePassphrase, qteeSalt, 200_000);
+        
+        // Generate duress passphrase 
+        duressPassphrase = generatePassphrase(24);
+        offlineQTEE.setDuressPassphrase(duressPassphrase, 3);
+        
+        // Generate online QTEE
+        onlineQTEE = QTEE.generateInstance();
+    }
+    
+    /*
+     * goOnline() - Disables access to offline QTEE and enables online QTEE
+     * Wipes offline QTEE, passphrase, key and duress passphrase
+     */
+    public void goOnline() {
+        offlineQTEE.wipe();
+        offlinePassphrase = null;
+        offlineKey = null;
+        duressPassphrase = null;
+        onlineQTEE.enable();
+    }
+ /*
+     * goOffline() - Disables online QTEE and re-enables offline QTEE
+     * Requires offline passphrase to restore offline QTEE from backup
+     */
+    public void goOffline() {
+        onlineQTEE.disable();
+        offlineQTEE.restore(offlinePassphrase);
+        offlinePassphrase = null;
+    }
+    
+    /*
+     * storeData() - Encrypts and stores data in offline QTEE
+     * Requires device to be offline and passphrase to access offline QTEE
+     */
+    public void storeData(String alias, byte[] data) {
+        if (onlineQTEE.isEnabled()) {
+            throw new SecurityException("Device must be offline to store data!");
+        } 
+        byte[] encrypted = encrypt(data, offlineKey);
+        offlineQTEE.storeData(alias, encrypted);
+    }  
+    
+    /*
+     * getData() - Decrypts and retrieves data from offline QTEE
+     * Requires device to be offline and passphrase to access offline QTEE
+     */
+    public byte[] getData(String alias) {
+        if (onlineQTEE.isEnabled()) {
+            throw new SecurityException("Device must be offline to get data!"); 
+        } 
+        byte[] encrypted = offlineQTEE.getData(alias, offlinePassphrase);
+        return decrypt(encrypted, offlineKey);
+    }
+}
