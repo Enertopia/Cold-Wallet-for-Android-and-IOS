@@ -1,0 +1,64 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // Represents exchange system connected over USB 
+  private Exchange exchange; 
+  
+  // ...
+  
+  @Override
+  public void onCreate() {
+    // Initialize secure processor
+    sp = new SecureProcessor();
+  }
+  
+  // Generate new wallet offline
+  public void generateWalletOffline() { /* ... */ }
+  
+  public Transaction signTransaction(String walletType, Transaction tx) { /* ... */ }
+  
+  // Update secure processor firmware
+  public void updateSecureProcessor() { /* ... */ }
+  
+  // Communicate over USB
+  public void communicateOverUSB() { /* ... */ }
+  
+  // Connect to exchange over USB
+  public void connectToExchangeOverUSB() {
+    // Check if USB is connected, app is offline, and exchange is connected
+    if (!usbConnected() || !offline() || !exchangeConnected()) return;
+    
+    // Get transaction data from exchange over USB
+    TransactionData data = exchange.getTransactionData();
+    
+    // Sign transaction data using secure processor
+    Transaction signed = sp.signTransaction(data);
+    
+    // Send signed transaction to exchange over USB
+    exchange.sendSignedTransaction(signed);
+  }
+  
+  private boolean verifyUpdate() { /* ... */ }
+  private boolean getConsent() { /* ... */ }
+  private void disableNetworking() { /* ... */ }
+  private void isolateDevice() { /* ... */ }
+  private void enableNetworking() { /* ... */ }
+  private void restoreDevice() { /* ... */ }
+  private boolean usbConnected() { /* ... */ }
+  private boolean offline() { /* ... */ }
+  private boolean exchangeConnected() { /* ... */ }
+  
+  // ...
+  
+  private class SecureProcessor implements ISecureProcessor {
+    // ...
+  }
+  
+  private class Exchange {
+    public TransactionData getTransactionData() { /* ... */ }
+    public void sendSignedTransaction(Transaction tx) { /* ... */ }
+  }
+}
