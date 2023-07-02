@@ -1,0 +1,70 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // Represents exchange system connected over USB 
+  private Exchange exchange; 
+  
+  // Generate private key offline 
+  private Key generatePrivateKeyOffline() { /* ... */ }
+
+  // Get public key from private key 
+  public Key getPublicKey(Key privateKey) { /* ... */ }
+
+  // Share public key with hot wallet
+  public void sharePublicKey(Key publicKey) { /* ... */ }
+  
+  // ...
+  
+  @Override
+  public void onCreate() {
+    // Initialize secure processor
+    sp = new SecureProcessor();
+  }
+  
+  // Generate new wallet offline
+  public void generateWalletOffline() { /* ... */ }
+  
+  public Transaction signTransaction(String walletType, Transaction tx) { /* ... */ }
+  
+  // Sign transaction request from hot wallet
+  public Transaction signTransactionRequest(Transaction request) { 
+    // Verify transaction is valid
+    if (!verifyTransaction(request)) return null;
+    
+    // Sign transaction with private key
+    return signTransaction(privateKey, request); 
+  }
+  
+  // Update secure processor firmware
+  public void updateSecureProcessor() { /* ... */ }
+  
+  // Never expose private key
+  private Key privateKey; 
+  
+  // Remove methods to directly connect to exchange
+  // ...
+  
+  private boolean verifyUpdate() { /* ... */ }
+  private boolean getConsent() { /* ... */ }
+  private void disableNetworking() { /* ... */ }
+  private void isolateDevice() { /* ... */ }
+  private void enableNetworking() { /* ... */ }
+  private void restoreDevice() { /* ... */ }
+  private boolean usbConnected() { /* ... */ }
+  private boolean offline() { /* ... */ }
+  private boolean exchangeConnected() { /* ... */ }
+  
+  // ...
+  
+  private class SecureProcessor implements ISecureProcessor {
+    // ...
+  }
+  
+  private class Exchange {
+    public TransactionData getTransactionData() { /* ... */ }
+    public void sendSignedTransaction(Transaction tx) { /* ... */ }
+  }
+}
