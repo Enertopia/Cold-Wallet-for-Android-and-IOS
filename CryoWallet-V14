@@ -1,0 +1,45 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // ...
+  
+  public String generateSeedPhrase() {
+    // ... Generate seed phrase ...
+    
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to confirm");
+    builder.setDescription("Scan your biometrics to confirm your identity and see your seed phrase");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    System.out.println("Please re-enter the seed phrase to confirm: ");
+    // ... Confirm seed phrase ...
+  }
+  
+  // ...
+  
+  public Transaction signTransaction(String walletType, Transaction tx) {
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to sign transaction");
+    builder.setDescription("Scan your biometrics to confirm your identity and sign the transaction");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    // ... Sign transaction ...
+  }
+  
+  public void updateSecureProcessor() {
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to update firmware");
+    builder.setDescription("Scan your biometrics to confirm your identity and update the firmware");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    // ... Update firmware ...
+  }
+  
+  // ...
+}
