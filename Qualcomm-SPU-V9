@@ -1,0 +1,57 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // ...
+  
+  @Override
+  public void onCreate() {
+    // Initialize secure processor
+    sp = new SecureProcessor();
+  }
+  
+  // Generate new wallet offline
+  public void generateWalletOffline() { /* ... */ }
+  
+  public Transaction signTransaction(String walletType, Transaction tx) { /* ... */ }
+  
+  // Update secure processor firmware
+  public void updateSecureProcessor() {
+    // Verify authenticity and integrity of update
+    if (!verifyUpdate()) return;
+    
+    // Require user consent to update
+    if (!getConsent()) return;
+    
+    // Disable networking and isolate device
+    disableNetworking();
+    isolateDevice();
+    
+    // Apply firmware update to secure processor
+    sp.applyFirmwareUpdate();
+    
+    // Re-enable networking and restore device
+    enableNetworking();
+    restoreDevice();
+  }
+  
+  private boolean verifyUpdate() { /* ... */ }
+  private boolean getConsent() { /* ... */ }
+  private void disableNetworking() { /* ... */ }
+  private void isolateDevice() { /* ... */ }
+  private void enableNetworking() { /* ... */ }
+  private void restoreDevice() { /* ... */ }
+  
+  // ...
+  
+  private class SecureProcessor implements ISecureProcessor {
+    
+    @Override
+    public void applyFirmwareUpdate() {
+      // Apply firmware update internally
+      // Use anti-rollback and other protections
+    }
+  } 
+}
