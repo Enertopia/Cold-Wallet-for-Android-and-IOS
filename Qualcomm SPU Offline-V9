@@ -1,0 +1,53 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // ...
+  
+  @Override
+  public void onCreate() {
+    // Initialize secure processor
+    sp = new SecureProcessor();
+  }
+  
+  // Generate new wallet offline
+  public void generateWalletOffline() {
+    // Disable networking in Android app
+    disableNetworking();
+    
+    // Request wallet generation through secure processor API 
+    encryptedSeed = sp.generateNewWallet();
+    
+    // Re-enable networking 
+    enableNetworking();
+  }
+  
+  public Transaction signTransaction(String walletType, Transaction tx) {
+    // Disable networking in Android app
+    disableNetworking();
+    
+    // Request transaction signing through secure processor API
+    Transaction signed = sp.signTransaction(tx);
+    
+    // Re-enable networking 
+    enableNetworking();
+    
+    return signed;
+  }
+  
+  private void disableNetworking() {
+    // Issue command to disable all wireless connectivity
+  }
+  
+  private void enableNetworking() {
+    // Issue command to re-enable all wireless connectivity
+  }
+  
+  // ...
+  
+  private class SecureProcessor implements ISecureProcessor {
+    // ...
+  }
+}
