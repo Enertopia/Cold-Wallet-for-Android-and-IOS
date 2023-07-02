@@ -1,0 +1,111 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // Represents exchange system connected over USB 
+  private Exchange exchange; 
+  
+  // Generate private key offline 
+  private Key generatePrivateKeyOffline() { 
+    // Generate random private key
+    Key privateKey = generateRandomPrivateKey();
+    
+    // Store private key in secure enclave
+    secureEnclave.storeKey(privateKey);
+  }
+
+  // Get public key from private key 
+  public Key getPublicKey(Key privateKey) { 
+    // Get public key from private key
+    return privateKey.getPublicKey();
+  }
+
+  // Share public key with hot wallet
+  public void sharePublicKey(Key publicKey) {
+    // Share public key with paired hot wallet app
+    hotWallet.updatePublicKey(publicKey);
+  }
+  
+  // ...
+  
+  @Override
+  public void onCreate() {
+    // Initialize secure processor
+    sp = new SecureProcessor();
+  }
+  
+  // Generate new wallet offline
+  public void generateWalletOffline() {
+    // Generate private key offline
+    Key privateKey = generatePrivateKeyOffline();
+  }
+  
+  public Transaction signTransaction(String walletType, Transaction tx) {
+    // Get unsigned transaction from hot wallet
+    Transaction unsignedTx = hotWallet.getUnsignedTransaction();
+    
+    // Sign transaction with private key from secure enclave
+    Transaction signed = secureEnclave.signTransaction(unsignedTx);
+    
+    // Return signed transaction to hot wallet
+    return signed;
+  }
+  
+  // Sign transaction request from hot wallet
+  public Transaction signTransactionRequest(Transaction request) { 
+    // Get transaction request from hot wallet
+    Transaction txRequest = hotWallet.getTransactionRequest();
+    
+    // Verify transaction is valid 
+    if (!verifyTransaction(txRequest)) return null;
+    
+    // Sign transaction with private key from secure enclave
+    return secureEnclave.signTransaction(txRequest); 
+  }
+  
+  // Update secure processor firmware
+  public void updateSecureProcessor() { 
+    // Get firmware update from hot wallet
+    FirmwareUpdate update = hotWallet.getFirmwareUpdate();
+    
+    // Verify update is valid and approved
+    if (!verifyUpdate(update) || !getConsent(update)) return;
+    
+    // Install firmware update
+    secureEnclave.installUpdate(update);
+  }
+  
+  // Never expose private key
+  private Key privateKey; 
+  
+  // Remove methods to directly connect to exchange
+  // ...
+  
+  private boolean verifyUpdate(FirmwareUpdate update) { /* ... */ }
+  private boolean getConsent(FirmwareUpdate update) { /* ... */ }
+  private void disableNetworking() { /* ... */ }
+  private void isolateDevice() { /* ... */ }
+  private void enableNetworking() { /* ... */ }
+  private void restoreDevice() { /* ... */ }
+  
+  // ...
+  
+  private class SecureProcessor implements ISecureProcessor {
+    // ...
+  }
+  
+  private class SecureEnclave {
+    public void storeKey(Key privateKey) { /* ... */ }
+    public Transaction signTransaction(Transaction tx) { /* ... */ }
+    public void installUpdate(FirmwareUpdate update) { /* ... */ }
+  }
+  
+  private class HotWallet {
+    public void updatePublicKey(Key publicKey) { /* ... */ }
+    public Transaction getUnsignedTransaction() { /* ... */ } 
+    public Transaction getTransactionRequest() { /* ... */ }
+    public FirmwareUpdate getFirmwareUpdate() { /* ... */ }
+  } 
+}
