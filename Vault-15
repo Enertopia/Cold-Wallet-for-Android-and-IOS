@@ -1,0 +1,84 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // Map of supported cryptocurrencies and networks
+  private Map<String, List<String>> supportedCrypto = new HashMap<>();
+  
+  // API to communicate with secure processor
+  private ISecureProcessor sp;
+  
+  // Represents exchange system connected over USB 
+  private Exchange exchange; 
+  
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    // Disable connectivity on app start
+    disableConnectivity();
+  }
+  
+  @Override
+  public void onTerminate() {
+    super.onTerminate();
+    // Re-enable connectivity on app termination
+    enableConnectivity();
+  }
+  
+  public void disableConnectivity() {
+    // Disable Wi-Fi, Bluetooth, NFC, etc.
+  }
+  
+  public void enableConnectivity() {
+    // Re-enable Wi-Fi, Bluetooth, NFC, etc.
+  }
+  
+  public void addSupportedCrypto(String crypto, List<String> networks) {
+    supportedCrypto.put(crypto, networks);
+  }
+  
+  public String generateSeedPhrase() {
+    // ... Generate seed phrase ...
+    
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to confirm");
+    builder.setDescription("Scan your biometrics to confirm your identity and see your seed phrase");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    System.out.println("Please re-enter the seed phrase to confirm: ");
+    // ... Confirm seed phrase ...
+  }
+  
+  // ...
+  
+  public Transaction signTransaction(String walletType, Transaction tx) {
+    // Check if cryptocurrency and network are supported
+    if (!supportedCrypto.containsKey(walletType) || 
+        !supportedCrypto.get(walletType).contains(tx.getNetwork())) {
+      throw new UnsupportedOperationException("Unsupported cryptocurrency or network");
+    }
+    
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to sign transaction");
+    builder.setDescription("Scan your biometrics to confirm your identity and sign the transaction");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    // ... Sign transaction ...
+  }
+  
+  public void updateSecureProcessor() {
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to update firmware");
+    builder.setDescription("Scan your biometrics to confirm your identity and update the firmware");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    // ... Update firmware ...
+  }
+  
+  // ...
+}
