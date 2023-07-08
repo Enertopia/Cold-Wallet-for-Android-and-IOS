@@ -1,0 +1,59 @@
+public class QTEEAndroidColdWallet extends Application {
+  // QTEE instance for offline storage
+  private QTEE offlineQTEE;  
+    
+  // QTEE instance for online functionality 
+  private QTEE onlineQTEE;
+  
+  // Passphrase to unlock offline QTEE
+  private char[] offlinePassphrase;
+  
+  // Seed phrase QTEE and passphrase
+  private QTEE seedQTEE;
+  private char[] seedPassphrase;
+  
+  public QTEEAndroidColdWallet() {
+    // Generate random offline QTEE passphrase
+    offlinePassphrase = generateRandomPassphrase(24); 
+        
+    // Generate separate online QTEE for networked use
+    onlineQTEE = QTEE.generateInstance();
+        
+    // Generate random seed QTEE passphrase
+    seedPassphrase = generateRandomPassphrase(24);
+  }
+  
+  public String generateSeedPhrase() {
+    // Generate random seed phrase
+    String seedPhrase = generateRandomSeedPhrase(24);
+    
+    // Confirm seed phrase with user through secure biometric prompt
+    seedPhrase = getUserConfirmation(seedPhrase); 
+    
+    // Generate random encryption key
+    byte[] encryptionKey = generateRandomEncryptionKey(32);
+    
+    // Store seed phrase and key in seed QTEE
+    seedQTEE.storeData("seed_phrase", seedPhrase.getBytes());
+    seedQTEE.storeData("encryption_key", encryptionKey);
+  }
+  
+  public byte[] getSeedData(String alias) {
+    // Ensure device is offline 
+    if (onlineQTEE.isEnabled()) {
+      throw new SecurityException("Device must be offline!");
+    }
+        
+    // Get data from seed QTEE using passphrase 
+    return seedQTEE.getData(alias, seedPassphrase);
+  }
+  
+  // Generate random passphrases and keys
+  private char[] generateRandomPassphrase(int length) {
+    // Generate random passphrase of given length
+  }
+  
+  private byte[] generateRandomEncryptionKey(int length) {
+    // Generate random encryption key of given length 
+  }
+}
