@@ -1,0 +1,92 @@
+/* Coded by Emiliano German Solazzi Griminger */  
+public class AndroidColdWallet extends Application {
+  
+  // Map of trusted systems and how connections are secured
+  private Map<String, ConnectionDetails> trustedSystems = new HashMap<>();
+  
+  // Represents secure processor isolated in TEE
+  private ISecureProcessor sp;
+  
+  // Represents exchange system connected over secure USB 
+  private Exchange exchange;
+  
+  // Wallet keys and data isolated in TEE
+  public static Wallet wallet;
+  
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    // Disable connectivity when app not in use
+    disableConnectivity();
+  }
+  
+  @Override
+  public void onTerminate() {
+    super.onTerminate();
+    // Re-enable connectivity and sync wallet
+    enableConnectivity();
+    syncWallet();
+    checkForUpdates();
+  }
+  
+  public void disableConnectivity() {
+    // Disable Wi-Fi, Bluetooth, NFC, etc.
+    closeTrustedConnections();
+  }
+  
+  public void enableConnectivity() {
+    // Re-enable Wi-Fi, Bluetooth, NFC, etc.
+    openTrustedConnections();
+  }
+  
+  public void addSupportedCrypto(String crypto, List<String> networks) {
+    // Add to trustedSystems map with security details
+  }
+  
+  public Wallet getWallet() {
+    if (wallet == null) {
+      wallet = new Wallet(getTEE()); 
+    } 
+    return wallet;
+  }
+  
+  public String generateSeedPhrase() {
+    Wallet wallet = getWallet();
+    // Generate seed phrase in TEE
+    String seedPhrase = wallet.generateSeedPhrase();
+    
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to confirm");
+    builder.setDescription("Scan your biometrics to confirm your identity and see your seed phrase");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    // Show seed phrase
+  }
+  
+  // ...
+  
+  public Transaction signTransaction(String walletType, Transaction tx) {
+    Wallet wallet = getWallet();
+    // Check if cryptocurrency and network are supported
+    if (!trustedSystems.containsKey(walletType) || 
+        !trustedSystems.get(walletType).contains(tx.getNetwork())) {
+      throw new UnsupportedOperationException("Unsupported cryptocurrency or network");
+    }
+    
+    // Sign transaction in TEE
+    Transaction signedTx = wallet.signTransaction(tx);
+    
+    BiometricPrompt.Builder builder = new BiometricPrompt.Builder(this);
+    builder.setTitle("Confirm Identity");
+    builder.setSubtitle("Scan biometrics to sign transaction");
+    builder.setDescription("Scan your biometrics to confirm your identity and sign the transaction");
+    BiometricPrompt biometricPrompt = builder.build();
+    biometricPrompt.authenticate(new BiometricPrompt.CryptoObject(Cipher.getInstance("AES/CBC/PKCS5Padding")));
+    
+    return signedTx;
+  }
+  
+  // ...  
+}
