@@ -1,0 +1,77 @@
+// AndroidColdWallet
+// Coded by Emiliano German Solazzi Griminger
+
+public class AndroidColdWallet extends Application {
+
+  // Interfaces and classes for key management, transactions, etc
+
+  /**
+   * Securely stores private keys and signs transactions. 
+   * Keys are isolated from rest of app.
+   */
+  private class SecureEnclave {
+    
+    // ...
+
+  }
+
+  /**
+   * Handles communication with main app.
+   * Used to request signatures, get updates etc.
+   */
+  private class HotWallet {
+
+    // ...
+
+  }
+
+  /**
+   * Generate private key randomly offline.
+   * Store in SecureEnclave when created.
+   */
+  private Key generatePrivateKeyOffline() {
+    
+    // ...
+    
+    return privateKey;
+    
+  }
+
+  // Parameterized strings
+  private static final String SUCCESS = "Success";
+
+  // Input validation
+  private boolean verifyUpdate(FirmwareUpdate update) throws InvalidFirmwareException {
+    
+    if (!isValid(update)) {
+      throw new InvalidFirmwareException("Invalid firmware"); 
+    }
+    
+    // ...
+
+  }
+
+  // Improved exception handling 
+  public Transaction signTransaction(Transaction tx) throws CryptoException {
+
+    try {
+      // Sign tx 
+      
+    } catch (Exception e) {
+      throw new CryptoException("Transaction signing failed", e);
+    }
+
+  }
+  
+  // ...
+  
+}
+
+// Custom exceptions
+class InvalidFirmwareException extends Exception {
+
+  public InvalidFirmwareException(String message) {
+    super(message);
+  }
+
+}
