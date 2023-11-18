@@ -1,0 +1,92 @@
+import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.Settings;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final int REQUEST_PERMISSION = 1;
+
+    private SecureProcessor sp;
+    private SecureEnclave secureEnclave;
+    private HotWallet hotWallet;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Request the CHANGE_NETWORK_STATE permission at runtime
+        requestPermission();
+
+        // Enable airplane mode when the app is launched
+        setAirplaneMode(this, true);
+
+        // Initialize secure processor, secure enclave, and hot wallet
+        sp = new SecureProcessor();
+        secureEnclave = new SecureEnclave();
+        hotWallet = new HotWallet();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Disable airplane mode when the app is closed
+        setAirplaneMode(this, false);
+    }
+
+    // ... (existing methods for secure processor, secure enclave, and hot wallet)
+
+    private void requestPermission() {
+        // Request the CHANGE_NETWORK_STATE permission at runtime for Android 6.0 and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.CHANGE_NETWORK_STATE)
+                        != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CHANGE_NETWORK_STATE}, REQUEST_PERMISSION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_PERMISSION) {
+            // Check if the permission is granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, enable airplane mode
+                setAirplaneMode(this, true);
+            } else {
+                // Permission denied, handle accordingly (e.g., inform the user)
+            }
+        }
+    }
+
+    private static void setAirplaneMode(Context context, boolean enable) {
+        // Check if the app has the CHANGE_NETWORK_STATE permission
+        if (hasChangeNetworkStatePermission(context)) {
+            // Change airplane mode
+            Settings.Global.putInt(context.getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, enable ? 1 : 0);
+
+            // Broadcast an intent to inform the system of the change
+            Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+            intent.putExtra("state", enable);
+            context.sendBroadcast(intent);
+        }
+    }
+
+    private static boolean hasChangeNetworkStatePermission(Context context) {
+        // Check if the app has the CHANGE_NETWORK_STATE permission
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE)
+                        == PackageManager.PERMISSION_GRANTED;
+    }
+}
