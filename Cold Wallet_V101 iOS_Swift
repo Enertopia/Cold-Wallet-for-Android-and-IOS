@@ -6,6 +6,7 @@
 
 import UIKit
 import LocalAuthentication
+import Alamofire
 
 class Transaction {
     // Placeholder for Transaction class
@@ -36,89 +37,65 @@ class ColdWalletViewController: UIViewController {
         sp = SecureProcessor()
         secureEnclave = SecureEnclave()
         coldWallet = ColdWallet()
+
+        // Enable Airplane Mode when the app is launched
+        enforceAirplaneMode()
     }
 
-    private func generateColdWalletAddress() -> String {
-        // Use secure methods to generate an address in the cold wallet
-        return coldWallet.generateAddress()
+    // ...
+
+    private func isAirplaneModeEnabled() -> Bool {
+        let reachability = NetworkReachabilityManager()
+        return reachability?.isReachable ?? false
     }
 
-    private func showColdWalletAddress(_ address: String) {
-        // Display cold wallet address (UI-specific logic)
-        print("Your Cold Wallet Address: \(address)")
-    }
-
-    func receiveFunds() {
-        let coldWalletAddress = generateColdWalletAddress()
-        showColdWalletAddress(coldWalletAddress)
-    }
-
-    private func confirmSeedPhrase(_ enteredSeedPhrase: String) -> Bool {
-        // Replace this with actual seed phrase confirmation logic using the cold wallet
-        return coldWallet.confirmSeedPhrase(enteredSeedPhrase)
-    }
-
-    private func signColdWalletTransaction(walletType: String, tx: Transaction) -> Transaction {
-        // Replace this with actual transaction signing logic using the cold wallet
-        return coldWallet.signTransaction(walletType: walletType, transaction: tx)
-    }
-
-    private func updateSecureProcessorFirmware() {
-        // Replace this with actual firmware update logic using the cold wallet
-        coldWallet.updateFirmware()
-    }
-
-    private func authenticateWithBiometrics(actionDescription: String, action: @escaping () -> Void) {
-        let context = LAContext()
-        var error: NSError?
-
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: actionDescription) {
-                (success, evaluateError) in
-
-                if success {
-                    action()
-                } else {
-                    // Handle biometric authentication error
-                    print("Biometric Authentication Error: \(evaluateError?.localizedDescription ?? "Unknown error")")
-                }
-            }
-        } else {
-            // Biometrics not available or not configured
-            print("Biometrics not available or not configured")
+    private func enforceAirplaneMode() {
+        // Add code to directly enable Airplane Mode if possible
+        // Otherwise, provide user instructions to enable it manually
+        if !isAirplaneModeEnabled() {
+            // Display prompt or instructions to the user
+            print("Please enable Airplane Mode for secure offline operations.")
         }
     }
 
+    // ...
+
     func generateSeedPhrase() {
-        authenticateWithBiometrics(actionDescription: "generate seed phrase") {
-            let seedPhrase = self.coldWallet.generateSeedPhrase()
+        enforceAirplaneMode()
 
-            print("Please re-enter the seed phrase to confirm: ")
-            let enteredSeedPhrase = "UserEnteredSeedPhrase"
+        // Proceed with seed phrase generation
+        let seedPhrase = coldWallet.generateSeedPhrase()
 
-            if self.confirmSeedPhrase(enteredSeedPhrase) {
-                print("Seed phrase confirmed")
-            } else {
-                print("Seed phrase not confirmed")
-            }
+        print("Please re-enter the seed phrase to confirm: ")
+        let enteredSeedPhrase = "UserEnteredSeedPhrase"
+
+        if confirmSeedPhrase(enteredSeedPhrase) {
+            print("Seed phrase confirmed")
+        } else {
+            print("Seed phrase not confirmed")
         }
     }
 
     func signTransaction(walletType: String, tx: Transaction) {
-        authenticateWithBiometrics(actionDescription: "sign transaction") {
-            let signedTx = self.signColdWalletTransaction(walletType: walletType, tx: tx)
+        enforceAirplaneMode()
 
-            // Use the signed transaction as needed
-            // ...
+        // Proceed with transaction signing
+        let signedTx = signColdWalletTransaction(walletType: walletType, tx: tx)
 
-            print("Transaction signed successfully")
-        }
+        // Use the signed transaction as needed
+        // ...
+
+        print("Transaction signed successfully")
     }
 
     func updateSecureProcessor() {
-        authenticateWithBiometrics(actionDescription: "update firmware") {
-            self.updateSecureProcessorFirmware()
-            print("Secure Processor Firmware Updated")
-        }
+        enforceAirplaneMode()
+
+        // Proceed with firmware update
+        updateSecureProcessorFirmware()
+
+        print("Secure Processor Firmware Updated")
     }
+
+    // ...
 }
