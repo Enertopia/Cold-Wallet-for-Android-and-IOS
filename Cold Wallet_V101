@@ -1,115 +1,12 @@
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-
-public class Transaction {
-    // ...
-
-    public Transaction(String transactionId, String sender, String receiver, double amount, Date timestamp) {
-        // Validation checks
-        if (transactionId == null || sender == null || receiver == null || amount < 0) {
-            throw new IllegalArgumentException("Invalid arguments for creating a transaction.");
-        }
-
-        this.transactionId = transactionId;
-        this.sender = sender;
-        this.receiver = receiver;
-        this.amount = amount;
-        this.timestamp = new Date(timestamp.getTime()); // Defensive copy to protect the internal state
-    }
-
-    // ...
-}
-
-}
+import android.util.Pair;
 
 import java.security.Key;
-
-public class SecureProcessor {
-
-    // Placeholder for secure processor specific properties or dependencies
-
-    public SecureProcessor() {
-        // Initialization logic for the secure processor
-    }
-
-    public Transaction signTransaction(Transaction transaction, Key privateKey) {
-        validateTransactionForSigning(transaction);
-        validatePrivateKey(privateKey);
-
-        // Perform secure signing operations
-        // Example: Use a cryptographic library to sign the transaction
-
-        // Placeholder for the actual signing logic
-
-        // Return the signed transaction
-        return new Transaction(/* signed transaction details */);
-    }
-
-    // Additional methods for secure processor functionality can be added here
-
-    private void validateTransactionForSigning(Transaction transaction) {
-        // Perform any necessary validation checks before signing a transaction
-        if (transaction == null || transaction.getTimestamp() == null || transaction.getAmount() <= 0) {
-            throw new IllegalArgumentException("Invalid transaction for signing");
-        }
-        // Add more validation as needed
-    }
-
-    private void validatePrivateKey(Key privateKey) {
-        // Perform any necessary validation checks for the private key
-        if (privateKey == null) {
-            throw new IllegalArgumentException("Invalid private key");
-        }
-        // Add more validation as needed
-    }
-}
-
-}
-
-public class SecureEnclave {
-    public void storeKey(Key privateKey, String mnemonic) {
-        // Store private key and mnemonic in the secure enclave
-        // Example: Store in Android Keystore or other secure storage
-    }
-
-    // Placeholder for other methods in SecureEnclave class
-}
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-
-public class ColdWallet {
-
-    private final List<Transaction> transactions;
-
-    public ColdWallet() {
-        this.transactions = new ArrayList<>();
-    }
-
-    public void storeTransaction(Transaction transaction) {
-        validateTransaction(transaction);
-        transactions.add(transaction);
-        // Additional logic for storing the transaction securely, if needed
-    }
-
-    public List<Transaction> getTransactions() {
-        // Return an unmodifiable list to prevent external modifications
-        return Collections.unmodifiableList(transactions);
-    }
-
-    // Additional methods for cold wallet functionality can be added here
-
-    private void validateTransaction(Transaction transaction) {
-        // Perform any validation checks before storing the transaction
-        if (transaction == null || transaction.getAmount() <= 0 || transaction.getTimestamp() == null) {
-            throw new IllegalArgumentException("Invalid transaction details");
-        }
-        // Add more validation as needed
-    }
-}
-
-}
 
 public class ColdWalletActivity extends AppCompatActivity {
 
@@ -118,16 +15,9 @@ public class ColdWalletActivity extends AppCompatActivity {
     private ColdWallet coldWallet;
 
     @Override
-public String toString() {
-    return "Transaction{" +
-            "transactionId='" + transactionId + '\'' +
-            ", sender='" + sender + '\'' +
-            ", receiver='" + receiver + '\'' +
-            ", amount=" + amount +
-            ", timestamp=" + timestamp +
-            '}';
-}
-
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_cold_wallet);
 
         // Initialize secure processor, secure enclave, and cold wallet
         sp = new SecureProcessor();
@@ -150,8 +40,8 @@ public String toString() {
     private void generateWalletOffline() {
         // Generate private key offline along with BIP-39 mnemonic
         Pair<Key, String> keyMnemonicPair = generatePrivateKeyOffline();
-        Key privateKey = keyMnemonicPair.getFirst();
-        String mnemonic = keyMnemonicPair.getSecond();
+        Key privateKey = keyMnemonicPair.first;
+        String mnemonic = keyMnemonicPair.second;
 
         // Store private key and mnemonic in secure enclave
         secureEnclave.storeKey(privateKey, mnemonic);
@@ -200,6 +90,115 @@ public String toString() {
     // Exchange
     private class Exchange {
         // ... (existing code remains unchanged)
+    }
+}
+
+// Your existing classes remain unchanged below this line:
+
+// Existing Transaction class
+class Transaction {
+    private String transactionId;
+    private String sender;
+    private String receiver;
+    private double amount;
+    private Date timestamp;
+
+    // Constructors, getters, setters, and other methods can be added based on your requirements
+
+    public Transaction(String transactionId, String sender, String receiver, double amount, Date timestamp) {
+        // Validation checks
+        if (transactionId == null || sender == null || receiver == null || amount < 0) {
+            throw new IllegalArgumentException("Invalid arguments for creating a transaction.");
+        }
+
+        this.transactionId = transactionId;
+        this.sender = sender;
+        this.receiver = receiver;
+        this.amount = amount;
+        this.timestamp = new Date(timestamp.getTime()); // Defensive copy to protect the internal state
+    }
+
+    // ... (existing code remains unchanged)
+}
+
+// Existing SecureProcessor class
+class SecureProcessor {
+    // Placeholder for secure processor specific properties or dependencies
+
+    public SecureProcessor() {
+        // Initialization logic for the secure processor
+    }
+
+    public Transaction signTransaction(Transaction transaction, Key privateKey) {
+        validateTransactionForSigning(transaction);
+        validatePrivateKey(privateKey);
+
+        // Perform secure signing operations
+        // Example: Use a cryptographic library to sign the transaction
+
+        // Placeholder for the actual signing logic
+
+        // Return the signed transaction
+        return new Transaction(/* signed transaction details */);
+    }
+
+    // Additional methods for secure processor functionality can be added here
+
+    private void validateTransactionForSigning(Transaction transaction) {
+        // Perform any necessary validation checks before signing a transaction
+        if (transaction == null || transaction.getTimestamp() == null || transaction.getAmount() <= 0) {
+            throw new IllegalArgumentException("Invalid transaction for signing");
+        }
+        // Add more validation as needed
+    }
+
+    private void validatePrivateKey(Key privateKey) {
+        // Perform any necessary validation checks for the private key
+        if (privateKey == null) {
+            throw new IllegalArgumentException("Invalid private key");
+        }
+        // Add more validation as needed
+    }
+}
+
+// Existing SecureEnclave class
+class SecureEnclave {
+    public void storeKey(Key privateKey, String mnemonic) {
+        // Store private key and mnemonic in the secure enclave
+        // Example: Store in Android Keystore or other secure storage
+    }
+
+    // Placeholder for other methods in SecureEnclave class
+}
+
+// Existing ColdWallet class
+class ColdWallet {
+
+    private final List<Transaction> transactions;
+
+    public ColdWallet() {
+        this.transactions = new ArrayList<>();
+    }
+
+    public void storeTransaction(Transaction transaction) {
+        validateTransaction(transaction);
+        transactions.add(transaction);
+        // Additional logic for storing the transaction securely, if needed
+    }
+
+    public List<Transaction> getTransactions() {
+        // Return an unmodifiable list to prevent external modifications
+        return Collections.unmodifiableList(transactions);
+    }
+
+    // Additional methods for cold wallet functionality can be added here
+
+    private void validateTransaction(Transaction transaction) {
+        // Perform any validation checks before storing the transaction
+        if (transaction == null || transaction.getAmount() <= 0 || transaction.getTimestamp() == null) {
+            throw new IllegalArgumentException("Invalid transaction details");
+        }
+        // Add more validation as needed
     }
 }
 
