@@ -3,122 +3,101 @@ import LocalAuthentication
 
 class ColdWalletViewController: UIViewController {
 
-    private let secureProcessor = SecureProcessor()
-    private let secureEnclave = SecureEnclave()
-    private let coldWallet = ColdWallet()
-
-    @IBOutlet private weak var addressLabel: UILabel!
+    private var sp: SecureProcessor!
+    private var secureEnclave: SecureEnclave!
+    private var coldWallet: ColdWallet!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Request necessary permissions at runtime
-        requestPermission()
-
         // Initialize secure processor, secure enclave, and cold wallet
-        secureProcessor.initialize()
-        secureEnclave.initialize()
-        coldWallet.initialize()
+        sp = SecureProcessor()
+        secureEnclave = SecureEnclave()
+        coldWallet = ColdWallet()
     }
 
     private func generateColdWalletAddress() -> String {
-        let secureKey = secureEnclave.deriveSecureKey()
-        return coldWallet.generateAddress(secureKey: secureKey)
+        // Use secure methods to generate an address in the cold wallet
+        return coldWallet.generateAddress()
     }
 
-    private func showColdWalletAddress(address: String) {
-        DispatchQueue.main.async {
-            self.addressLabel.text = "Your Cold Wallet Address: \(address)"
-        }
+    private func showColdWalletAddress(_ address: String) {
+        // Display cold wallet address (UI-specific logic)
+        print("Your Cold Wallet Address: \(address)")
     }
 
-    @IBAction private func receiveFunds() {
+    func receiveFunds() {
         let coldWalletAddress = generateColdWalletAddress()
-        showColdWalletAddress(address: coldWalletAddress)
+        showColdWalletAddress(coldWalletAddress)
+    }
+
+    private func confirmSeedPhrase(_ enteredSeedPhrase: String) -> Bool {
+        // Replace this with actual seed phrase confirmation logic using the cold wallet
+        return coldWallet.confirmSeedPhrase(enteredSeedPhrase)
+    }
+
+    private func signColdWalletTransaction(walletType: String, tx: Transaction) -> Transaction {
+        // Replace this with actual transaction signing logic using the cold wallet
+        return coldWallet.signTransaction(walletType: walletType, transaction: tx)
+    }
+
+    private func updateSecureProcessorFirmware() {
+        // Replace this with actual firmware update logic using the cold wallet
+        coldWallet.updateFirmware()
     }
 
     private func authenticateWithBiometrics(actionDescription: String, action: @escaping () -> Void) {
         let context = LAContext()
-
         var error: NSError?
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            // Biometrics not available, handle accordingly
-            return
-        }
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: actionDescription) {
+                (success, evaluateError) in
 
-        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Confirm Identity to \(actionDescription)") { success, authenticationError in
-            if success {
-                // Biometric authentication succeeded
-                action()
-            } else {
-                // Biometric authentication failed or was canceled
-                DispatchQueue.main.async {
-                    self.showBiometricAuthenticationFailure()
+                if success {
+                    action()
+                } else {
+                    // Handle biometric authentication error
+                    print("Biometric Authentication Error: \(evaluateError?.localizedDescription ?? "Unknown error")")
                 }
             }
+        } else {
+            // Biometrics not available or not configured
+            print("Biometrics not available or not configured")
         }
     }
 
-    private func showBiometricAuthenticationFailure() {
-        let alert = UIAlertController(title: "Biometric Authentication Failed", message: "Unable to verify your identity.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
-    }
-
-    @IBAction private func generateSeedPhrase() {
+    func generateSeedPhrase() {
         authenticateWithBiometrics(actionDescription: "generate seed phrase") {
             let seedPhrase = self.coldWallet.generateSeedPhrase()
 
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: "Seed Phrase Generated",
-                                                        message: "Please re-enter the seed phrase to confirm:",
-                                                        preferredStyle: .alert)
+            print("Please re-enter the seed phrase to confirm: ")
+            let enteredSeedPhrase = "UserEnteredSeedPhrase"
 
-                alertController.addTextField { textField in
-                    textField.placeholder = "Enter Seed Phrase"
-                }
-
-                alertController.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                    if let enteredSeedPhrase = alertController.textFields?.first?.text,
-                       self.confirmSeedPhrase(enteredSeedPhrase: enteredSeedPhrase) {
-                        self.showSeedPhraseConfirmationAlert(success: true)
-                    } else {
-                        self.showSeedPhraseConfirmationAlert(success: false)
-                    }
-                })
-
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-                self.present(alertController, animated: true, completion: nil)
+            if self.confirmSeedPhrase(enteredSeedPhrase) {
+                print("Seed phrase confirmed")
+            } else {
+                print("Seed phrase not confirmed")
             }
         }
     }
 
-    private func confirmSeedPhrase(enteredSeedPhrase: String) -> Bool {
-        // Replace this with actual seed phrase confirmation logic using the cold wallet
-        return coldWallet.confirmSeedPhrase(enteredSeedPhrase: enteredSeedPhrase)
+    func signTransaction(walletType: String, tx: Transaction) {
+        authenticateWithBiometrics(actionDescription: "sign transaction") {
+            let signedTx = self.signColdWalletTransaction(walletType: walletType, tx: tx)
+
+            // Use the signed transaction as needed
+            // ...
+
+            print("Transaction signed successfully")
+        }
     }
 
-    private func showSeedPhraseConfirmationAlert(success: Bool) {
-        let title = success ? "Seed Phrase Confirmed" : "Seed Phrase Not Confirmed"
-        let message = success ? "You can now securely store your seed phrase." : "Seed phrase confirmation failed."
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
-    }
-
-    // Add similar methods for transaction signing, firmware update, and other functionalities
-
-    private func requestPermission() {
-        // Check and request necessary permissions
-        // ...
-    }
-
-    // ... (Other methods remain unchanged)
-
-    private func setAirplaneMode(enable: Bool) {
-        // Implement logic to enable or disable airplane mode
-        // ...
+    func updateSecureProcessor() {
+        authenticateWithBiometrics(actionDescription: "update firmware") {
+            self.updateSecureProcessorFirmware()
+            print("Secure Processor Firmware Updated")
+        }
     }
 }
+
