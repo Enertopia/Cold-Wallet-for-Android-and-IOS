@@ -1,32 +1,5 @@
-//
-//  ColdWalletViewController.swift
-//
-//  Created by Emiliano German Solazzi Griminger
-//
-
+* Copyright, Emiliano German Solazzi Griminger
 import UIKit
-import LocalAuthentication
-
-class Transaction {
-    // Placeholder for Transaction class
-}
-
-class SecureProcessor {
-    // Placeholder for SecureProcessor class
-}
-
-class SecureEnclave {
-    public func storeKey(_ privateKey: Key, mnemonic: String) {
-        // Store private key and mnemonic in the secure enclave
-        // Example: Store in Keychain or other secure storage
-    }
-
-    // Placeholder for other methods in SecureEnclave class
-}
-
-class ColdWallet {
-    // Placeholder for ColdWallet class
-}
 
 class ColdWalletViewController: UIViewController {
 
@@ -98,6 +71,16 @@ class ColdWalletViewController: UIViewController {
 
     // ... (existing code remains unchanged)
 
+    // Secure Enclave
+    private class SecureEnclave {
+        public func storeKey(_ privateKey: Key, mnemonic: String) {
+            // Store private key and mnemonic in the secure enclave
+            // Example: Store in Keychain or other secure storage
+        }
+
+        // ... (existing code remains unchanged)
+    }
+
     // Hot Wallet
     private class HotWallet {
         // ... (existing code remains unchanged)
@@ -107,4 +90,26 @@ class ColdWalletViewController: UIViewController {
     private class Exchange {
         // ... (existing code remains unchanged)
     }
+}
+
+// Your existing classes remain unchanged below this line:
+
+// Existing Transaction class
+class Transaction {
+    // Placeholder for Transaction class
+}
+
+// Existing SecureProcessor class
+class SecureProcessor {
+    // Placeholder for SecureProcessor class
+}
+
+// Existing SecureEnclave class
+class SecureEnclave {
+    // Placeholder for SecureEnclave class
+}
+
+// Existing ColdWallet class
+class ColdWallet {
+    // Placeholder for ColdWallet class
 }
