@@ -35,8 +35,40 @@ public class SecureEnclave {
     // Placeholder for other methods in SecureEnclave class
 }
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class ColdWallet {
-    // Placeholder for ColdWallet class
+
+    private final List<Transaction> transactions;
+
+    public ColdWallet() {
+        this.transactions = new ArrayList<>();
+    }
+
+    public void storeTransaction(Transaction transaction) {
+        validateTransaction(transaction);
+        transactions.add(transaction);
+        // Additional logic for storing the transaction securely, if needed
+    }
+
+    public List<Transaction> getTransactions() {
+        // Return an unmodifiable list to prevent external modifications
+        return Collections.unmodifiableList(transactions);
+    }
+
+    // Additional methods for cold wallet functionality can be added here
+
+    private void validateTransaction(Transaction transaction) {
+        // Perform any validation checks before storing the transaction
+        if (transaction == null || transaction.getAmount() <= 0 || transaction.getTimestamp() == null) {
+            throw new IllegalArgumentException("Invalid transaction details");
+        }
+        // Add more validation as needed
+    }
+}
+
 }
 
 public class ColdWalletActivity extends AppCompatActivity {
