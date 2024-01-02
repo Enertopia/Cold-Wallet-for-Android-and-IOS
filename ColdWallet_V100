@@ -1,3 +1,4 @@
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -5,7 +6,9 @@ import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
@@ -18,6 +21,7 @@ import javax.crypto.Cipher;
 public class ColdWalletActivity extends AppCompatActivity {
 
     private static final int REQUEST_PERMISSION = 1;
+    private static final String TAG = ColdWalletActivity.class.getSimpleName();
 
     private SecureProcessor sp;
     private SecureEnclave secureEnclave;
@@ -32,10 +36,10 @@ public class ColdWalletActivity extends AppCompatActivity {
         requestPermission();
 
         // Enable USB connectivity when the app is launched
-        setUsbConnectivity(this, true);
+        setUsbConnectivity(true);
 
         // Enable airplane mode when the app is launched
-        setAirplaneMode(this, true);
+        setAirplaneMode(true);
 
         // Initialize secure processor, secure enclave, and cold wallet
         sp = new SecureProcessor();
@@ -48,7 +52,7 @@ public class ColdWalletActivity extends AppCompatActivity {
         super.onStart();
 
         // Enable airplane mode when the app is in the foreground
-        setAirplaneMode(this, true);
+        setAirplaneMode(true);
     }
 
     @Override
@@ -56,7 +60,7 @@ public class ColdWalletActivity extends AppCompatActivity {
         super.onStop();
 
         // Disable airplane mode when the app is in the background
-        setAirplaneMode(this, false);
+        setAirplaneMode(false);
     }
 
     @Override
@@ -64,10 +68,10 @@ public class ColdWalletActivity extends AppCompatActivity {
         super.onDestroy();
 
         // Disable USB connectivity when the app is closed
-        setUsbConnectivity(this, false);
+        setUsbConnectivity(false);
 
         // Disable airplane mode when the app is closed
-        setAirplaneMode(this, false);
+        setAirplaneMode(false);
     }
 
     private String generateColdWalletAddress() {
@@ -112,45 +116,52 @@ public class ColdWalletActivity extends AppCompatActivity {
         // ...
     }
 
-    private static void setUsbConnectivity(Context context, boolean enable) {
+    private void setUsbConnectivity(boolean enable) {
         // Check if the app has the USB permission
-        if (hasUsbPermission(context)) {
+        if (hasUsbPermission()) {
             // Enable or disable USB connectivity
-            UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-            // Implement USB connectivity enabling or disabling logic using usbManager
+            UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
             if (enable) {
                 // Enable USB connectivity logic
+                Log.d(TAG, "USB Connectivity Enabled");
             } else {
                 // Disable USB connectivity logic
+                Log.d(TAG, "USB Connectivity Disabled");
             }
         }
     }
 
-    private static boolean hasUsbPermission(Context context) {
+    private boolean hasUsbPermission() {
         // Check if the app has USB-related permissions
         // You might need to implement this based on your specific requirements
         return true;
     }
 
-    private static void setAirplaneMode(Context context, boolean enable) {
+    private void setAirplaneMode(boolean enable) {
         // Check if the app has the CHANGE_NETWORK_STATE permission
-        if (hasChangeNetworkStatePermission(context)) {
+        if (hasChangeNetworkStatePermission()) {
             // Change airplane mode
-            Settings.Global.putInt(context.getContentResolver(),
+            Settings.Global.putInt(getContentResolver(),
                     Settings.Global.AIRPLANE_MODE_ON, enable ? 1 : 0);
 
             // Broadcast an intent to inform the system of the change
             Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
             intent.putExtra("state", enable);
-            context.sendBroadcast(intent);
+            sendBroadcast(intent);
+
+            if (enable) {
+                Log.d(TAG, "Airplane Mode Enabled");
+            } else {
+                Log.d(TAG, "Airplane Mode Disabled");
+            }
         }
     }
 
-    private static boolean hasChangeNetworkStatePermission(Context context) {
+    private boolean hasChangeNetworkStatePermission() {
         // Check if the app has the CHANGE_NETWORK_STATE permission
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.CHANGE_NETWORK_STATE)
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.CHANGE_NETWORK_STATE)
                         == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -166,6 +177,13 @@ public class ColdWalletActivity extends AppCompatActivity {
                 super.onAuthenticationSucceeded(result);
                 action.run();
             }
+
+            @Override
+            public void onAuthenticationError(int errorCode, CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                // Handle biometric authentication error
+                Log.e(TAG, "Biometric Authentication Error: " + errString);
+            }
         });
     }
 
@@ -173,13 +191,13 @@ public class ColdWalletActivity extends AppCompatActivity {
         authenticateWithBiometrics("generate seed phrase", () -> {
             String seedPhrase = coldWallet.generateSeedPhrase();
 
-            System.out.println("Please re-enter the seed phrase to confirm: ");
+            Log.d(TAG, "Please re-enter the seed phrase to confirm: ");
             String enteredSeedPhrase = "UserEnteredSeedPhrase";
 
             if (confirmSeedPhrase(enteredSeedPhrase)) {
-                System.out.println("Seed phrase confirmed");
+                Log.d(TAG, "Seed phrase confirmed");
             } else {
-                System.out.println("Seed phrase not confirmed");
+                Log.d(TAG, "Seed phrase not confirmed");
             }
         });
     }
@@ -190,10 +208,15 @@ public class ColdWalletActivity extends AppCompatActivity {
 
             // Use the signed transaction as needed
             // ...
+
+            Log.d(TAG, "Transaction signed successfully");
         });
     }
 
     public void updateSecureProcessor() {
-        authenticateWithBiometrics("update firmware", this::updateSecureProcessorFirmware);
+        authenticateWithBiometrics("update firmware", () -> {
+            updateSecureProcessorFirmware();
+            Log.d(TAG, "Secure Processor Firmware Updated");
+        });
     }
 }
