@@ -1,5 +1,27 @@
+//
+//  ColdWalletViewController.swift
+//
+//  Created by Emiliano German Solazzi Griminger
+//
+
 import UIKit
 import LocalAuthentication
+
+class Transaction {
+    // Placeholder for Transaction class
+}
+
+class SecureProcessor {
+    // Placeholder for SecureProcessor class
+}
+
+class SecureEnclave {
+    // Placeholder for SecureEnclave class
+}
+
+class ColdWallet {
+    // Placeholder for ColdWallet class
+}
 
 class ColdWalletViewController: UIViewController {
 
@@ -100,4 +122,3 @@ class ColdWalletViewController: UIViewController {
         }
     }
 }
-
