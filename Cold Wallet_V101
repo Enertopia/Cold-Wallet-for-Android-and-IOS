@@ -1,129 +1,126 @@
 /* Coded by Emiliano German Solazzi Griminger */  
 public class AndroidColdWallet extends Application {
   
-  // API to communicate with secure processor
-  private ISecureProcessor sp;
-  
-  // Represents exchange system connected over USB 
-  private Exchange exchange; 
-  
-  // ...
-
-  @Override
-  public void onCreate() {
-    // Initialize secure processor
-    sp = new SecureProcessor();
+    // API to communicate with secure processor
+    private ISecureProcessor sp;
     
-    // Initialize exchange
-    exchange = new Exchange();
-    
-    // Enable necessary security measures
-    enforceSecurity();
-  }
+    // Represents exchange system connected over USB 
+    private Exchange exchange; 
+    private SecureEnclave secureEnclave;
 
-  // Enforce security measures during app initialization
-  private void enforceSecurity() {
-    enforceAirplaneMode();
-    setUsbConnectivity(true);
-    // Add any additional security measures as needed
-  }
+    @Override
+    public void onCreate() {
+        // Initialize secure processor
+        sp = new SecureProcessor();
+        
+        // Initialize exchange
+        exchange = new Exchange();
+        
+        // Initialize secure enclave
+        secureEnclave = new SecureEnclave();
+        
+        // Enable necessary security measures
+        enforceSecurity();
+    }
 
-  // Generate new wallet offline
-  public void generateWalletOffline() {
-    // Generate private key offline
-    Key privateKey = generatePrivateKeyOffline();
-  }
+    // Enforce security measures during app initialization
+    private void enforceSecurity() {
+        enforceAirplaneMode();
+        setUsbConnectivity(true);
+        // Add any additional security measures as needed
+    }
 
-  // Get public key from private key 
-  public Key getPublicKey(Key privateKey) { 
-    // Get public key from private key
-    return privateKey.getPublicKey();
-  }
+    // Generate new wallet offline
+    public void generateWalletOffline() {
+        // Generate private key offline
+        Key privateKey = generatePrivateKeyOffline();
 
-  // Share public key with hot wallet
-  public void sharePublicKey(Key publicKey) {
-    // Share public key with paired hot wallet app
-    hotWallet.updatePublicKey(publicKey);
-  }
+        // Additional security measures
+        secureEnclave.storeKey(privateKey);
+    }
 
-  // ...
+    // Get public key from private key 
+    public Key getPublicKey(Key privateKey) { 
+        // Get public key from private key
+        return privateKey.getPublicKey();
+    }
 
-  // Update secure processor firmware
-  public void updateSecureProcessor() {
-    // Check for necessary conditions before updating
-    if (!offline() || !verifyUpdate() || !getConsent()) return;
-    
-    // Perform firmware update
-    sp.updateFirmware();
-  }
+    // Share public key with hot wallet
+    public void sharePublicKey(Key publicKey) {
+        // Share public key with paired hot wallet app
+        hotWallet.updatePublicKey(publicKey);
+    }
 
-  // Communicate over USB
-  public void communicateOverUSB() {
-    // Check for necessary conditions before communication
-    if (!usbConnected() || !offline()) return;
-    
+    // ...
+
+    // Update secure processor firmware
+    public void updateSecureProcessor() {
+        // Check for necessary conditions before updating
+        if (!offline() || !verifyUpdate() || !getConsent()) return;
+        
+        // Perform firmware update
+        sp.updateFirmware();
+    }
+
     // Communicate over USB
+    public void communicateOverUSB() {
+        // Check for necessary conditions before communication
+        if (!usbConnected() || !offline()) return;
+        
+        // Communicate over USB
+        // ...
+    }
+
+    // Connect to exchange over USB
+    public void connectToExchangeOverUSB() {
+        // Check if USB is connected, app is offline, and exchange is connected
+        if (!usbConnected() || !offline() || !exchangeConnected()) return;
+        
+        // Get transaction data from exchange over USB
+        TransactionData data = exchange.getTransactionData();
+        
+        // Sign transaction data using secure processor
+        Transaction signed = sp.signTransaction(data);
+        
+        // Send signed transaction to exchange over USB
+        exchange.sendSignedTransaction(signed);
+    }
+
     // ...
-  }
 
-  // Connect to exchange over USB
-  public void connectToExchangeOverUSB() {
-    // Check if USB is connected, app is offline, and exchange is connected
-    if (!usbConnected() || !offline() || !exchangeConnected()) return;
-    
-    // Get transaction data from exchange over USB
-    TransactionData data = exchange.getTransactionData();
-    
-    // Sign transaction data using secure processor
-    Transaction signed = sp.signTransaction(data);
-    
-    // Send signed transaction to exchange over USB
-    exchange.sendSignedTransaction(signed);
-  }
+    // Never expose private key
+    private Key generatePrivateKeyOffline() { 
+        // Generate random private key
+        Key privateKey = generateRandomPrivateKey();
+        
+        return privateKey;
+    }
 
-  // ...
+    // ... (existing code remains unchanged)
 
-  // Never expose private key
-  private Key generatePrivateKeyOffline() { 
-    // Generate random private key
-    Key privateKey = generateRandomPrivateKey();
-    
-    // Store private key in secure enclave
-    secureEnclave.storeKey(privateKey);
+    // Secure Enclave
+    private class SecureEnclave {
+        public void storeKey(Key privateKey) { /* ... */ }
+        public Transaction signTransaction(Transaction tx) { /* ... */ }
+        public void installUpdate(FirmwareUpdate update) { /* ... */ }
+    }
 
-    return privateKey;
-  }
+    // Hot Wallet
+    private class HotWallet {
+        public void updatePublicKey(Key publicKey) { /* ... */ }
+        public Transaction getUnsignedTransaction() { /* ... */ } 
+        public Transaction getTransactionRequest() { /* ... */ }
+        public FirmwareUpdate getFirmwareUpdate() { /* ... */ }
+    }
 
-  // ... (existing code remains unchanged)
+    // ... (existing code remains unchanged)
 
-  // Additional methods for key generation, transaction signing, etc.
-  // ...
+    // Exchange
+    private class Exchange {
+        public TransactionData getTransactionData() { /* ... */ }
+        public void sendSignedTransaction(Transaction tx) { /* ... */ }
 
-  // ... (existing code remains unchanged)
-
-  // Secure Enclave
-  private class SecureEnclave {
-    public void storeKey(Key privateKey) { /* ... */ }
-    public Transaction signTransaction(Transaction tx) { /* ... */ }
-    public void installUpdate(FirmwareUpdate update) { /* ... */ }
-  }
-
-  // Hot Wallet
-  private class HotWallet {
-    public void updatePublicKey(Key publicKey) { /* ... */ }
-    public Transaction getUnsignedTransaction() { /* ... */ } 
-    public Transaction getTransactionRequest() { /* ... */ }
-    public FirmwareUpdate getFirmwareUpdate() { /* ... */ }
-  }
-
-  // ... (existing code remains unchanged)
-
-  // Exchange
-  private class Exchange {
-    public TransactionData getTransactionData() { /* ... */ }
-    public void sendSignedTransaction(Transaction tx) { /* ... */ }
-
-    // Additional methods for exchange communication
-    // ...
-  }
+        // Additional methods for exchange communication
+        // ...
+    }
 }
