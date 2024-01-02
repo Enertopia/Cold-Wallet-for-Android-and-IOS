@@ -2,23 +2,22 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import java.security.SecureRandom;
 import javax.crypto.Cipher;
 
-/* Coded by Emiliano German Solazzi Griminger */
+/* Copyright (C) 2024 Emiliano German Solazzi Griminger */
 
 public class ColdWalletActivity extends AppCompatActivity {
-
-    // ... (existing code remains unchanged)
 
     private static final int REQUEST_PERMISSION = 1;
 
@@ -34,11 +33,8 @@ public class ColdWalletActivity extends AppCompatActivity {
         // Request necessary permissions at runtime
         requestPermission();
 
-        // Enable USB connectivity when the app is launched
-        setUsbConnectivity(this, true);
-
-        // Enable airplane mode when the app is launched
-        setAirplaneMode(this, true);
+        // Enable security measures when the app is launched
+        initializeSecurity();
 
         // Initialize secure processor, secure enclave, and cold wallet
         sp = new SecureProcessor();
@@ -46,62 +42,65 @@ public class ColdWalletActivity extends AppCompatActivity {
         coldWallet = new ColdWallet();
     }
 
-    // ... (existing code remains unchanged)
-
-    // Robust Private Key Storage
-    private String generateColdWalletAddress() {
-        // Replace this with secure key derivation and storage using Key Derivation Function (KDF)
-        // and AES-256 encryption within Secure Enclave.
-        byte[] secureKey = secureEnclave.deriveSecureKey();
-        return coldWallet.generateAddress(secureKey);
+    private void initializeSecurity() {
+        // Enable appropriate security measures (e.g., Airplane Mode, USB connectivity)
+        enforceAirplaneMode();
+        setUsbConnectivity(this, true);
+        // Add any additional security measures as needed
     }
 
-    // ... (existing code remains unchanged)
+    private boolean isAirplaneModeEnabled() {
+        // Check if Airplane Mode is enabled
+        int airplaneMode = Settings.Global.getInt(getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0);
+        return airplaneMode == 1;
+    }
 
-    // Transaction Validation
-    private Transaction signColdWalletTransaction(String walletType, Transaction tx) {
-        // Implement thorough validation (address, amount, fees) in signColdWalletTransaction.
-        // Incorporate multi-signature scheme if desired.
-        if (isValidTransaction(tx)) {
-            return coldWallet.signTransaction(walletType, tx);
-        } else {
-            // Handle invalid transaction
-            return null;
+    private void enforceAirplaneMode() {
+        // Enable Airplane Mode directly if possible, otherwise prompt the user
+        if (!isAirplaneModeEnabled()) {
+            enableAirplaneMode();
         }
     }
 
-    private boolean isValidTransaction(Transaction tx) {
-        // Implement thorough validation logic here (e.g., address, amount, fees)
-        return true;
+    private void enableAirplaneMode() {
+        // Check and request necessary permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_SETTINGS}, REQUEST_PERMISSION);
+        } else {
+            // Enable Airplane Mode
+            Settings.Global.putInt(getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 1);
+
+            // Broadcast an intent to inform the system of the change
+            Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+            intent.putExtra("state", true);
+            sendBroadcast(intent);
+
+            Toast.makeText(this, "Airplane Mode Enabled", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    // ... (existing code remains unchanged)
-
-    // Code Obfuscation
-    // Choose preferred obfuscation techniques and apply them to the code.
-
-    // Tamper Detection
-    // Implement mechanisms to detect unauthorized modifications.
-
-    // Libraries/Frameworks
-    // Integrate chosen libraries/frameworks (e.g., Android Keystore, Secure Enclave Crypto API).
-
-    // Visual Feedback
-    // Add visual indicators for airplane mode, biometric authentication, and secure connectivity.
-    private void showVisualIndicators() {
-        // Implement visual indicators as needed.
+    private void requestPermission() {
+        // Check and request necessary permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_SETTINGS}, REQUEST_PERMISSION);
+        }
+        // Additional permissions can be added based on your requirements
     }
 
-    // Accessibility
-    // Consider accessibility features if needed.
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // Handle permission results
+        if (requestCode == REQUEST_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+            } else {
+                // Permission denied
+            }
+        }
+    }
 
-    // ... (existing code remains unchanged)
-
-    // USB/Bluetooth Connectivity
-    // Implement secure communication protocols and connection management if applicable.
-
-    // Hardware Integration
-    // Adapt code to the specific communication protocol of the cold wallet hardware.
-
-    // ... (existing code remains unchanged)
+    private void authenticateWithBiometrics(String actionDescription, Runnable action) {
+        // Biometric authentication logic
+        // ...
+    }
 }
