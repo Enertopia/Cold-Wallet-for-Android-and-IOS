@@ -1,24 +1,41 @@
-/* Coded by Emiliano German Solazzi Griminger */  
+/* Coded by Emiliano German Solazzi Griminger */
+
+import java.security.Key;
+import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.ArrayList;
+import java.util.List;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
 public class AndroidColdWallet extends Application {
-  
+
     // API to communicate with secure processor
     private ISecureProcessor sp;
-    
-    // Represents exchange system connected over USB 
-    private Exchange exchange; 
+
+    // Represents exchange system connected over USB
+    private Exchange exchange;
     private SecureEnclave secureEnclave;
+
+    // Hot wallet instance
+    private HotWallet hotWallet;
 
     @Override
     public void onCreate() {
         // Initialize secure processor
         sp = new SecureProcessor();
-        
+
         // Initialize exchange
         exchange = new Exchange();
-        
+
         // Initialize secure enclave
         secureEnclave = new SecureEnclave();
-        
+
+        // Initialize hot wallet
+        hotWallet = new HotWallet();
+
         // Enable necessary security measures
         enforceSecurity();
     }
@@ -39,8 +56,8 @@ public class AndroidColdWallet extends Application {
         secureEnclave.storeKey(privateKey);
     }
 
-    // Get public key from private key 
-    public Key getPublicKey(Key privateKey) { 
+    // Get public key from private key
+    public Key getPublicKey(Key privateKey) {
         // Get public key from private key
         return privateKey.getPublicKey();
     }
@@ -57,7 +74,7 @@ public class AndroidColdWallet extends Application {
     public void updateSecureProcessor() {
         // Check for necessary conditions before updating
         if (!offline() || !verifyUpdate() || !getConsent()) return;
-        
+
         // Perform firmware update
         sp.updateFirmware();
     }
@@ -66,7 +83,7 @@ public class AndroidColdWallet extends Application {
     public void communicateOverUSB() {
         // Check for necessary conditions before communication
         if (!usbConnected() || !offline()) return;
-        
+
         // Communicate over USB
         // ...
     }
@@ -75,13 +92,13 @@ public class AndroidColdWallet extends Application {
     public void connectToExchangeOverUSB() {
         // Check if USB is connected, app is offline, and exchange is connected
         if (!usbConnected() || !offline() || !exchangeConnected()) return;
-        
+
         // Get transaction data from exchange over USB
         TransactionData data = exchange.getTransactionData();
-        
+
         // Sign transaction data using secure processor
         Transaction signed = sp.signTransaction(data);
-        
+
         // Send signed transaction to exchange over USB
         exchange.sendSignedTransaction(signed);
     }
@@ -89,10 +106,10 @@ public class AndroidColdWallet extends Application {
     // ...
 
     // Never expose private key
-    private Key generatePrivateKeyOffline() { 
+    private Key generatePrivateKeyOffline() {
         // Generate random private key
         Key privateKey = generateRandomPrivateKey();
-        
+
         return privateKey;
     }
 
@@ -108,12 +125,10 @@ public class AndroidColdWallet extends Application {
     // Hot Wallet
     private class HotWallet {
         public void updatePublicKey(Key publicKey) { /* ... */ }
-        public Transaction getUnsignedTransaction() { /* ... */ } 
+        public Transaction getUnsignedTransaction() { /* ... */ }
         public Transaction getTransactionRequest() { /* ... */ }
         public FirmwareUpdate getFirmwareUpdate() { /* ... */ }
     }
-
-    // ... (existing code remains unchanged)
 
     // Exchange
     private class Exchange {
@@ -124,3 +139,4 @@ public class AndroidColdWallet extends Application {
         // ...
     }
 }
+
