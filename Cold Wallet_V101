@@ -1,3 +1,6 @@
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.util.Pair;
@@ -13,16 +16,18 @@ public class ColdWalletActivity extends AppCompatActivity {
     private SecureProcessor sp;
     private SecureEnclave secureEnclave;
     private ColdWallet coldWallet;
+    private AirplaneModeManager airplaneModeManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cold_wallet);
 
-        // Initialize secure processor, secure enclave, and cold wallet
+        // Initialize secure processor, secure enclave, cold wallet, and airplane mode manager
         sp = new SecureProcessor();
         secureEnclave = new SecureEnclave();
         coldWallet = new ColdWallet();
+        airplaneModeManager = new AirplaneModeManager(this);
 
         // Enable necessary security measures during app initialization
         enforceSecurity();
@@ -30,7 +35,7 @@ public class ColdWalletActivity extends AppCompatActivity {
 
     // Enforce security measures during app initialization
     private void enforceSecurity() {
-        enforceAirplaneMode();
+        airplaneModeManager.activateAirplaneMode(); // Activate airplane mode
         setUsbConnectivity(true);
         generateWalletOffline();
         // Add any additional security measures as needed
@@ -91,6 +96,23 @@ public class ColdWalletActivity extends AppCompatActivity {
     private class Exchange {
         // ... (existing code remains unchanged)
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Reset any security measures here
+        disableAirplaneMode(); // Deactivate airplane mode
+        restoreUSBConnectivity();
+        // Additional actions to return to normal communication
+    }
+
+    // Disable airplane mode
+    private void disableAirplaneMode() {
+        airplaneModeManager.deactivateAirplaneMode();
+    }
+
+    // ... (existing code remains unchanged)
+
 }
 
 // Your existing classes remain unchanged below this line:
@@ -201,4 +223,3 @@ class ColdWallet {
         // Add more validation as needed
     }
 }
-
