@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.your.package.name">
+
+    <!-- Add these lines for the necessary permissions -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
+    <application>
+        <!-- ... other configurations and activities ... -->
+    </application>
+</manifest>
