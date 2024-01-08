@@ -1,0 +1,199 @@
+import UIKit
+import Security
+import CryptoKit
+
+/**
+ CryoWallet - Cold Wallet Application
+ Copyright (c) 2022 Emiliano German Solazzi Griminger. All rights reserved.
+ */
+class ColdWalletViewController: UIViewController {
+
+    var secureProcessor: SecureProcessor?
+    var secureEnclave: SecureEnclave?
+    var coldWallet: ColdWallet?
+    var airplaneModeManager: AirplaneModeManager?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Initialize components
+        secureProcessor = SecureProcessor()
+        secureEnclave = SecureEnclave()
+        coldWallet = ColdWallet()
+        airplaneModeManager = AirplaneModeManager()
+
+        // Prompt user to turn on airplane mode and explain the benefits
+        promptAirplaneMode()
+    }
+
+    func promptAirplaneMode() {
+        let alertController = UIAlertController(title: "Airplane Mode", message: "To enhance security, it is recommended to turn on Airplane Mode. Do you want to proceed with Airplane Mode?", preferredStyle: .alert)
+
+        let yesAction = UIAlertAction(title: "Yes", style: .default) { _ in
+            self.handleAirplaneModeDecision(true)
+        }
+
+        let noAction = UIAlertAction(title: "No", style: .default) { _ in
+            self.handleAirplaneModeDecision(false)
+        }
+
+        alertController.addAction(yesAction)
+        alertController.addAction(noAction)
+
+        present(alertController, animated: true, completion: nil)
+    }
+
+    func handleAirplaneModeDecision(_ enableAirplaneMode: Bool) {
+        if enableAirplaneMode {
+            do {
+                try airplaneModeManager?.activateAirplaneMode()
+            } catch {
+                print("Error activating Airplane Mode: \(error)")
+                // Handle errors or inform the user
+            }
+        }
+
+        setUSBConnectivity(true)
+        generateWalletOffline()
+    }
+
+    func generateWalletOffline() {
+        do {
+            let (privateKey, mnemonic) = try generatePrivateKeyOffline()
+            try secureEnclave?.storeKey(privateKey, mnemonic: mnemonic)
+
+            // Display mnemonic for user backup (Example: Print to console)
+            print("Generated Mnemonic: \(mnemonic)")
+
+            // Additional advanced features
+            let publicKey = try secureProcessor?.derivePublicKey(from: privateKey)
+            let signature = try secureProcessor?.signMessage("Hello, Cryptography!", with: privateKey)
+            print("Public Key: \(publicKey ?? "N/A"), Signature: \(signature ?? "N/A")")
+
+            // Example of an improved mathematical calculation
+            let result = improvedMathCalculation()
+            print("Improved Math Result: \(result)")
+        } catch {
+            print("Error generating wallet: \(error)")
+            // Handle errors or inform the user
+        }
+    }
+
+    func generatePrivateKeyOffline() throws -> (privateKey: SecKey, mnemonic: String) {
+        // Generate a new private key using SecKey API
+        let privateKey = try secureProcessor?.generatePrivateKey()
+
+        // Generate BIP-39 mnemonic
+        let mnemonic = try generateMnemonic()
+
+        return (privateKey!, mnemonic)
+    }
+
+    func generateMnemonic() throws -> String {
+        // Use a BIP-39 library to generate mnemonic (similar to the Android version)
+        // ...
+
+        // Placeholder for illustration, replace with actual BIP-39 implementation
+        return "example mnemonic"
+    }
+
+    func improvedMathCalculation() -> Double {
+        // Example of an improved mathematical calculation
+        let result = sin(2.0) + log10(10.0) // Use log10 for base 10 logarithm
+        return result
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        // Reset any security measures here
+        do {
+            try airplaneModeManager?.deactivateAirplaneMode()
+        } catch {
+            print("Error deactivating Airplane Mode: \(error)")
+            // Handle errors or inform the user
+        }
+
+        restoreUSBConnectivity()
+    }
+
+    func restoreUSBConnectivity() {
+        // Implement USB connectivity restoration logic
+        // ...
+    }
+}
+
+// Placeholder for SecureProcessor, SecureEnclave, ColdWallet, and AirplaneModeManager classes
+class SecureProcessor {
+
+    func derivePublicKey(from privateKey: SecKey) throws -> String {
+        // Example: Derive public key from private key using CryptoKit
+        let privateKeyData = try Data.copyAsData(privateKey)
+        let privateKeyCryptoKit = try P256.Signing.PrivateKey(rawRepresentation: privateKeyData)
+        let publicKeyCryptoKit = privateKeyCryptoKit.publicKey
+        let publicKeyData = try publicKeyCryptoKit.rawRepresentation
+        return publicKeyData.base64EncodedString()
+    }
+
+    func signMessage(_ message: String, with privateKey: SecKey) throws -> String {
+        // Example: Sign a message using CryptoKit
+        let messageData = Data(message.utf8)
+        let signature = try P256.Signing.ECDSASignature(privateKey: privateKey, data: messageData)
+        return signature.rawRepresentation.base64EncodedString()
+    }
+
+    // Additional methods for secure processor functionality can be added here
+}
+
+class SecureEnclave {
+
+    func storeKey(_ privateKey: SecKey, mnemonic: String) throws {
+        // Store private key and mnemonic in the secure enclave
+        // Example: Use Keychain Services for secure storage
+        let privateKeyData = try Data.copyAsData(privateKey)
+        let mnemonicData = mnemonic.data(using: .utf8)!
+
+        var query = [String: Any]()
+        query[kSecClass as String] = kSecClassKey
+        query[kSecAttrApplicationTag as String] = "privateKeyTag"
+        query[kSecValueData as String] = privateKeyData
+
+        let statusPrivateKey = SecItemAdd(query as CFDictionary, nil)
+        guard statusPrivateKey == errSecSuccess || statusPrivateKey == errSecDuplicateItem else {
+            throw KeychainError.operationFailed(statusPrivateKey)
+        }
+
+        query[kSecClass as String] = kSecClassGenericPassword
+        query[kSecAttrAccount as String] = "mnemonicAccount"
+        query[kSecValueData as String] = mnemonicData
+
+        let statusMnemonic = SecItemAdd(query as CFDictionary, nil)
+        guard statusMnemonic == errSecSuccess || statusMnemonic == errSecDuplicateItem else {
+            throw KeychainError.operationFailed(statusMnemonic)
+        }
+    }
+
+    // Placeholder for other methods in SecureEnclave class
+}
+
+class ColdWallet {
+    // Placeholder for ColdWallet class
+}
+
+class AirplaneModeManager {
+
+    func activateAirplaneMode() throws {
+        // Implement logic to activate Airplane Mode
+        // ...
+    }
+
+    func deactivateAirplaneMode() throws {
+        // Implement logic to deactivate Airplane Mode
+        // ...
+    }
+}
+
+// Error handling for Keychain operations
+enum KeychainError: Error {
+    case operationFailed(OSStatus)
+}
