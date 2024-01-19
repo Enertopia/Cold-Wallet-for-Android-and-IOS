@@ -1,0 +1,116 @@
+package com.example.walletapp;
+
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
+import android.util.Pair;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import java.security.Key;
+import java.security.KeyStore;
+import okhttp3.OkHttpClient;
+import okhttp3.CertificatePinner;
+
+// Additional necessary imports
+
+public class ColdWalletActivity extends AppCompatActivity {
+
+    private static final String TAG = "ColdWalletActivity";
+    private SecureProcessor sp;
+    private SecureEnclave secureEnclave;
+    private ColdWallet coldWallet;
+    private AirplaneModeManager airplaneModeManager;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_cold_wallet);
+        initializeComponents();
+        promptForAirplaneMode();
+    }
+
+    private void initializeComponents() {
+        try {
+            sp = new SecureProcessor();
+            secureEnclave = new SecureEnclave(getApplicationContext());
+            coldWallet = new ColdWallet();
+            airplaneModeManager = new AirplaneModeManager(this);
+            initializeKeystore();
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing components: " + e.getMessage());
+            showToast("Error initializing app components");
+            finish();
+        }
+    }
+
+    private void promptForAirplaneMode() {
+        new AlertDialog.Builder(this)
+            .setTitle("Enhance Security")
+            .setMessage("We recommend enabling Airplane Mode to enhance security during wallet generation. Would you like to open Settings to enable Airplane Mode?")
+            .setPositiveButton("Yes", (dialog, which) -> openAirplaneModeSettings())
+            .setNegativeButton("No", (dialog, which) -> enforceSecurity())
+            .show();
+    }
+
+    private void openAirplaneModeSettings() {
+        startActivity(new Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS));
+        // The user is expected to manually enable Airplane Mode. App will resume afterwards.
+    }
+
+    private void enforceSecurity() {
+        try {
+            setUsbConnectivity(false);
+            generateWalletOfflineAsync();
+        } catch (Exception e) {
+            Log.e(TAG, "Error enforcing security: " + e.getMessage());
+            showToast("Security enforcement failed");
+        }
+    }
+
+    private void generateWalletOfflineAsync() {
+        new AsyncTask<Void, Void, Pair<Key, String>>() {
+            @Override
+            protected Pair<Key, String> doInBackground(Void... voids) {
+                return generatePrivateKeyOffline();
+            }
+
+            @Override
+            protected void onPostExecute(Pair<Key, String> keyMnemonicPair) {
+                if (keyMnemonicPair != null) {
+                    handleKeyMnemonicPair(keyMnemonicPair);
+                } else {
+                    Log.e(TAG, "Failed to generate wallet offline");
+                    showToast("Wallet generation failed");
+                }
+            }
+        }.execute();
+    }
+
+    // ... [Other methods like generatePrivateKeyOffline, initializeKeystore, etc.] ...
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            setUsbConnectivity(true);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onStop: " + e.getMessage());
+        }
+    }
+
+    private void setUsbConnectivity(boolean enable) {
+        // Implement logic to manage USB connectivity
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    // ... [Rest of the ColdWalletActivity code including inner classes and methods] ...
+
+    // Implement unit and integration tests for all components
+}
