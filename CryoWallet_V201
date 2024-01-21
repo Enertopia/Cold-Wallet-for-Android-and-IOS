@@ -1,0 +1,87 @@
+package com.example.cryowallet;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
+import android.util.Pair;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import java.security.Key;
+import java.security.KeyStore;
+import okhttp3.OkHttpClient;
+import okhttp3.CertificatePinner;
+
+// Other necessary imports
+
+public class CryoWalletActivity extends AppCompatActivity {
+
+    private static final String TAG = "CryoWalletActivity";
+    private SecureProcessor sp;
+    private SecureEnclave secureEnclave;
+    private ColdWallet coldWallet;
+    private AirplaneModeChangeReceiver airplaneModeChangeReceiver;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_cryo_wallet);
+        initializeComponents();
+        promptForAirplaneMode();
+
+        // Initialize the Airplane Mode receiver
+        airplaneModeChangeReceiver = new AirplaneModeChangeReceiver();
+    }
+
+    private void initializeComponents() {
+        try {
+            sp = new SecureProcessor();
+            secureEnclave = new SecureEnclave(getApplicationContext());
+            coldWallet = new ColdWallet();
+            initializeKeystore();
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing components: " + e.getMessage());
+            showToast("Error initializing app components");
+            finish();
+        }
+    }
+
+    private void promptForAirplaneMode() {
+        // Existing logic for prompting Airplane Mode
+    }
+
+    // ... [Other methods like openAirplaneModeSettings, enforceSecurity, etc.] ...
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Register the Airplane Mode receiver
+        IntentFilter filter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        registerReceiver(airplaneModeChangeReceiver, filter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unregister the Airplane Mode receiver
+        unregisterReceiver(airplaneModeChangeReceiver);
+
+        try {
+            // Existing logic for onStop
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onStop: " + e.getMessage());
+        }
+    }
+
+    // ... [Rest of the CryoWalletActivity code including inner classes and methods] ...
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    // Implement unit and integration tests for all components
+}
